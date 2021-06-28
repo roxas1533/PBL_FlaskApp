@@ -1,0 +1,8 @@
+div {
+    display: flex;
+    flex-flow: column;
+}
+
+input {
+    width:100px;
+}
