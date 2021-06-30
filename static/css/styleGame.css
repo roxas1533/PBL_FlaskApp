@@ -1,21 +1,60 @@
-body{
-    text-align: center;
+body {
+  text-align: center;
+  margin: 0px;
+  padding: 0px;
 }
-canvas{
-    width: 500px;
-    height: 550px;
-    border: thin white solid;
-    background-color: black;
+canvas {
+  width: 500px;
+  height: 550px;
+  border: thin white solid;
+  background-color: black;
 }
-table{
-    width: 200px;
-    margin-right:auto; margin-left:auto; 
+table {
+  width: 200px;
+  margin-right: auto;
+  margin-left: auto;
 }
-div{
-    display: inline-block;
-    text-align: left;
+div {
+  display: inline-block;
+  text-align: left;
 }
-span{
-    display: block;
+span {
+  display: block;
+}
 
+.component {
+  width: 100vw;
+}
+.login_field {
+  display: flex;
+  border-bottom: 1px solid;
+  padding-bottom: 10px;
+  align-items: center;
+  background-color: #101010;
+  padding-top: 10px;
+  padding-left: 10px;
+}
+#wrappedNewR {
+  border: 2px solid #000000;
+
+  margin-right: 10px;
+}
+#newR {
+  color: #ffffff;
+  text-decoration: none;
+  display: block;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+#wrappedNewR:hover {
+  background-color: black;
+}
+#loginButton {
+  text-decoration: none;
+  color: #ffffff;
+}
+#loginButton:hover {
+  text-decoration: underline;
 }

@@ -93,8 +93,6 @@ var globalItems;
 var globalBullets;
 var receiveFlag;
 var receiveFlagO;
-var socket;
-var room;
 const BT = [1, 3, 3, 10, 10, 5, 1, 10];
 const ItemColor = [
   "#ff1493",
@@ -153,7 +151,6 @@ function keydown(e) {
   }
   // console.log(e.keyCode) /
 }
-
 function keyUp(e) {
   if (gameScene == 1) {
     if (e.keyCode >= 37 && e.keyCode <= 40) key &= ~Math.pow(2, e.keyCode - 37);
@@ -167,50 +164,36 @@ function connectServer() {
   if (server ?? false) {
     server.close();
   }
-  socket = io();
-  socket.emit("firstMessage", { data: "hello" });
-  socket.on("firstReturn", (param) => {
-    room = param["room_name"];
-  });
-  socket.on("id", (param) => {
-    player = new Player(0, 0, 0, 0, param["id"], 100);
-  });
-  socket.on("firstData", (param) => {
-    globalMap = param["Map"];
-    globalPlayers = param["Player"];
-    gameScene = 1;
-  });
-  socket.on("updateData", (param) => {
-    globalPlayers = param["Player"];
-    console.log(param["Player"]);
-  });
-  //   server.onmessage = (e) => {
-  //     const data = JSON.parse(e.data);
+  globalPlayers = undefined;
+  let host = window.location.host;
+  server = new WebSocket(`ws://${host.replace(/:5000/g, ":3000")}/connect`);
 
-  //     if (data.id ?? false) {
-  //       player = new Player(0, 0, 0, 0, data.id, data.hp);
-  //       globalMap = data.map;
-  //     } else {
-  //       let players = data.player;
-  //       if (gameScene === 0) {
-  //         if (players ?? false) {
-  //           if (players.length === 2) {
-  //             gameScene = 1;
-  //           }
-  //         }
-  //       } else {
-  //         globalBullets = data.bullets;
-  //         receiveFlagO = true;
-  //         globalItems = data.item;
-  //         if (players ?? false) {
-  //           globalPlayers = players;
-  //           receiveFlag = true;
-  //         }
-  //       }
-  //     }
-  //   };
+  server.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+
+    if (data.id ?? false) {
+      player = new Player(0, 0, 0, 0, data.id, data.hp);
+      globalMap = data.map;
+    } else {
+      let players = data.player;
+      if (gameScene === 0) {
+        if (players ?? false) {
+          if (players.length === 2) {
+            gameScene = 1;
+          }
+        }
+      } else {
+        globalBullets = data.bullets;
+        receiveFlagO = true;
+        globalItems = data.item;
+        if (players ?? false) {
+          globalPlayers = players;
+          receiveFlag = true;
+        }
+      }
+    }
+  };
 }
-
 window.onload = () => {
   canvas = document.getElementById("canvas");
   c = canvas.getContext("2d");
@@ -367,32 +350,72 @@ function drawPoison(x, y) {
   c.fill();
   // c.fillRect(x, y, 30, 300)
 }
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+}
+function collisionMap(x, y, map) {
+  x = Math.ceil(x);
+  y = Math.ceil(y);
+  let startX = Math.max(Math.floor(x / 30.0), 0) | 0;
+  let startY = Math.max(Math.floor(y / 30.0), 0) | 0;
+  let endX = Math.min(Math.floor((x + 30.0 - 1.0) / 30.0), map[0].length) | 0;
+  let endY = Math.min(Math.floor((y + 30.0 - 1.0) / 30.0), map.length) | 0;
+  for (let i = startY; i <= endY; i++) {
+    for (j = startX; j <= endX; j++) {
+      if (map[i][j] == 1) {
+        return new Point(j, i);
+      }
+    }
+  }
+  return null;
+}
 function drawPlayers(players, map) {
   let r = 0;
   players.forEach((p, i) => {
-    if (p.ID === player.id) {
-      // if (!receiveFlag) {
-      //   if ((key & 1) > 0) {
-      //     p.vx = -p.mv;
-      //   }
-      //   if ((key & 4) > 0) {
-      //     p.vx = p.mv;
-      //   }
-      //   if ((key & 2) > 0) {
-      //     p.vy = -p.mv;
-      //   }
-      //   if ((key & 8) > 0) {
-      //     p.vy = p.mv;
-      //   }
-      //   if ((key & 5) == 0) {
+    if (!receiveFlag) {
+      // if ((key & 1) > 0) {
+      //     p.vx = -p.mv
+      // }
+      // if ((key & 4) > 0) {
+      //     p.vx = p.mv
+      // }
+      // if ((key & 2) > 0) {
+      //     p.vy = -p.mv
+      // }
+      // if ((key & 8) > 0) {
+      //     p.vy = p.mv
+      // }
+      // if ((key & 5) == 0) {
       //     p.vx = 0;
-      //   }
-      //   if ((key & 10) == 0) {
+      // }
+      // if ((key & 10) == 0) {
       //     p.vy = 0;
-      //   }
-      //   p.x += p.vx;
-      //   p.y += p.vy;
-      // // }
+      // }
+      let point = collisionMap(p.x + p.vx, p.y, map);
+      if (!point) {
+        p.x += p.vx;
+      } else {
+        if (p.vx < 0) {
+          p.x = (point.x + 1) * 30;
+        } else if (p.vx > 0) {
+          p.x = point.x * 30 - 30;
+        }
+      }
+      point = collisionMap(p.x, p.y + p.vy, map);
+      if (!point) {
+        p.y += p.vy;
+      } else {
+        if (p.vy < 0) {
+          p.y = (point.y + 1) * 30;
+        } else if (p.vy > 0) {
+          p.y = point.y * 30 - 30;
+        }
+      }
+    }
+    if (p.ID === player.id) {
       offsetX = 250 - p.x;
       offsetX = Math.min(offsetX, 0);
       offsetX = Math.max(offsetX, 500 - map[0].length * 30);
@@ -519,7 +542,9 @@ function loop() {
     button.draw(c);
   } else if (gameScene === 0) {
     cycle++;
-    socket.emit("key", { key: 0 });
+    if (server.readyState == 1) {
+      server.send(JSON.stringify({ key: 0 }));
+    }
     c.font = "20pt Arial";
     c.fillStyle = "rgb(0,0,0)";
     c.fillRect(0, 0, 550, 550);
@@ -595,7 +620,7 @@ function loop() {
         effectTimer = 0;
       }
     }
-    socket.emit("keyBoard", [key, room]);
+    server.send(JSON.stringify({ key: key }));
 
     receiveFlag = false;
     receiveFlagO = false;

@@ -1,7 +1,7 @@
 import threading
 from client import Client, Instance, addClient, deleteClient, updateKeyboard
 from flask import Flask
-from flask import request, render_template, request
+from flask import request, render_template, request, make_response
 import time
 import datetime
 import json
@@ -10,6 +10,7 @@ from engineio.payload import Payload
 
 Payload.max_decode_packets = 50
 import logging
+
 
 log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
@@ -22,9 +23,11 @@ def hello():
     return render_template("index.html")
 
 
-@app.route("/game", methods=["GET", "POST"])
+@app.route("/game", methods=["GET"])
 def game():
-    return render_template("game.html")
+    if request.cookies.get("user_id", None) is None:
+        res = make_response(render_template("notlogin.html"))
+    return res
 
 
 @socketio.on("connect", namespace="/test")
@@ -59,6 +62,7 @@ def handle_message(data):
 def handle_message(data):
     updateKeyboard(data[0], request.sid, data[1])
 
+
 if __name__ == "__main__":
     # app.run(debug=True)
-    socketio.run(app,host='0.0.0.0', port=3000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)

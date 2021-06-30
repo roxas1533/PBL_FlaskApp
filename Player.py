@@ -1,4 +1,5 @@
 import math
+
 key = {
     "left": 1,
     "up": 2,
@@ -9,6 +10,9 @@ key = {
     "D": 64,
     "Z": 128,
 }
+import ctypes
+
+libc = ctypes.CDLL("./lib.so")
 
 
 class Object:
@@ -36,6 +40,14 @@ class Player(Object):
         self.BT = 0
         self.BaseSpeed = 0
 
+    def collisionMap(self, x, y, MapID):
+        a = ctypes.c_double(x)
+        b = ctypes.c_double(y)
+        ret = libc.collisionMap(a, b, MapID)
+        if ret < 0:
+            return -1, -1
+        return ret >> 16, ret & 65535
+
     def update(self):
 
         if (self.key & key["left"]) > 0:
@@ -58,10 +70,20 @@ class Player(Object):
         if (self.key & key["down"]) == 0 and (self.key & key["up"]) == 0:
             self.vy = 0
 
-        self.x += self.vx
-        self.y += self.vy
+        x, _ = self.collisionMap(self.x + self.vx, self.y, 0)
+        if x == -1:
+            self.x += self.vx
+        else:
+            if self.vx < 0:
+                self.x = (x + 1) * 30
+            elif self.vx > 0:
+                self.x = x * 30 - 30
 
-    # def collitionMap(self,x,y,MapID):
-    #     x=math.ceil(x)
-    #     y=math.ceil(y)
-    #     startX=
+        _, y = self.collisionMap(self.x, self.y + self.vy, 0)
+        if y == -1:
+            self.y += self.vy
+        else:
+            if self.vy < 0:
+                self.y = (y + 1) * 30
+            elif self.vy > 0:
+                self.y = y * 30 - 30

@@ -1,0 +1,74 @@
+<html>
+
+<head>
+    <title>げえむ</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="500" height="550"></canvas>
+    <script type="text/javascript" src="script.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <table align="center">
+        <caption>
+            <h2>操作方法</h3>
+        </caption>
+        <tr>
+            <th scope="row">矢印キー</th>
+            <td>移動</td>
+        </tr>
+        <tr>
+            <th scope="row">Space</th>
+            <td>ショット</td>
+        </tr>
+        <tr>
+            <th scope="row">Space長押し</th>
+            <td>チャージショット</td>
+        </tr>
+        <tr>
+            <th scope="row">A</th>
+            <td>銃砲回転(反時計回り)</td>
+        </tr>
+        <tr>
+            <th scope="row">D</th>
+            <td>銃砲回転(時計回り)</td>
+        </tr>
+        <tr>
+            <th scope="row">Z</th>
+            <td>アイテム使用</td>
+        </tr>
+    </table>
+    <hr>
+    <h3>アップデートノート</h3>
+    <p>ver 1.0.3
+    <div>
+        <span>・クライアントが切断した場合残ったクライアントは勝利するように変更</span>
+        <span>・送信間隔を30FPSに変更、当たり判定をクライアントでも判定するように変更</span>
+    </div>
+    <p>ver 1.0.2
+    <div>
+        <span>・一部の弾が壁をすり抜けてエラーになるバグを修正</span>
+        <span>・初期の武装弾があまりにも弱すぎた問題を修正</span>
+        <span>・勝敗がついた後でもサーバー側で動作が動作が続いてしまう問題を修正</span>
+        <span>・弾と壁との当たり判定が実は左上1ピクセルしかなかった問題を修正</span>
+        <span>・チャージ中は移動速度が遅くなるように変更、これに伴い速度の内部処理を変更</span>
+        <span>・新規アイテム追加</span>
+        <span>・新規マップ追加</span>
+        <span>・プレイヤーの初期スポーン位置を変更</span>
+        <span>・アイテムが壁にめり込んでしまう問題を修正</span>
+    </div>
+    <p>ver 1.0.1
+    <div>
+        <span>・インスタンスごとのゲームループをクライアントの通信に依存しないように改善</span>
+        <span>・クライアントの接続管理方法を一新</span>
+        <span>・マップを追加</span>
+        <span>・銃砲切り替えアイテムを取ったときに弾数を+1するように変更</span>
+        <span>・残弾表示ゲージがおかしいのを修正</span>
+        <span>・タイトル画面追加</span>
+        <span>・回復エフェクトの追加</span>
+        <span>・アイテムの追加</span>
+    </div>
+    </p>
+    <p>ver 1.0.0 <br>公開</p>
+</body>
+
+</html>

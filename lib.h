@@ -68,13 +68,7 @@ typedef struct { void *data; GoInt len; GoInt cap; } GoSlice;
 extern "C" {
 #endif
 
-
-/* Return type for collisionMap */
-struct collisionMap_return {
-	GoInt r0;
-	GoInt r1;
-};
-extern struct collisionMap_return collisionMap(GoFloat64 x, GoFloat64 y, GoInt MapID);
+extern GoInt collisionMap(GoFloat64 x, GoFloat64 y, GoInt MapID);
 
 #ifdef __cplusplus
 }
