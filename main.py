@@ -1,12 +1,24 @@
+import random
 import threading
 from client import Client, Instance, addClient, deleteClient, updateKeyboard
 from flask import Flask
-from flask import request, render_template, request, make_response
+from flask import (
+    request,
+    render_template,
+    request,
+    make_response,
+    jsonify,
+    session,
+    redirect,
+    url_for,
+)
 import time
 import datetime
 import json
+import hashlib
 from flask_socketio import SocketIO, emit, join_room
 from engineio.payload import Payload
+import pymysql.cursors
 
 Payload.max_decode_packets = 50
 import logging
@@ -16,6 +28,17 @@ log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode="threading")
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+
+conn = pymysql.connect(
+    host="127.0.0.1",
+    unix_socket="/var/run/mysqld/mysqld.sock",
+    user="root",
+    password="root",
+    db="sampleDB",
+    charset="utf8mb4",
+    cursorclass=pymysql.cursors.DictCursor,
+)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -25,9 +48,87 @@ def hello():
 
 @app.route("/game", methods=["GET"])
 def game():
-    if request.cookies.get("user_id", None) is None:
+    if "username" not in session:
         res = make_response(render_template("notlogin.html"))
+    else:
+        res = make_response(
+            render_template("loginedGame.html", username=session["username"])
+        )
     return res
+
+
+@app.route("/regist", methods=["GET"])
+def registHtml():
+    return render_template("newRegist.html")
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.pop("username", None)
+    return ""
+
+
+@app.route("/login", methods=["GET"])
+def loginHtml():
+    if "username" not in session:
+        return render_template("login.html")
+    else:
+        return render_template("loginedGame.html", username=session["username"])
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = json.loads(request.json)
+    password = hashlib.sha256(data["password"].encode("utf-8")).hexdigest()
+    try:
+        with conn.cursor() as cursor:
+            sql = "select * from user where name=%s and password=%s"
+            cursor.execute(sql, (data["username"], password))
+            re = cursor.fetchall()
+            print(re)
+            if len(re) == 0:
+                return jsonify({"result": False, "reason": "ユーザー名またはパスワードが違います"})
+            if len(re) > 1:
+                raise Exception("複数一致")
+            session["username"] = re[0]["name"]
+        return jsonify({"result": True})
+    except Exception as e:
+        e = str(e)
+        print("エラー", e)
+        return jsonify({"result": False, "reason": "不明なエラー"})
+
+
+@app.route("/regist", methods=["POST"])
+def regist():
+    data = json.loads(request.json)
+    password = hashlib.sha256(data["password"].encode("utf-8")).hexdigest()
+    result = None
+    while True:
+        try:
+            with conn.cursor() as cursor:
+                sql = "insert user (id,name,password) value({},%s,%s)".format(
+                    random.randint(0, 100000)
+                )
+                cursor.execute(sql, (data["username"], password))
+
+                sql = "select * from user where name=%s and password=%s"
+                cursor.execute(sql, (data["username"], password))
+                re = cursor.fetchall()
+                session["username"] = re[0]["name"]
+                break
+
+        except Exception as e:
+            e = str(e)
+            if "user.name" in e:
+                return jsonify({"result": False, "reason": "既に使用されているユーザー名です"})
+            else:
+                return jsonify({"result": False, "reason": "不明なエラー"})
+        finally:
+            cursor.close()
+            conn.commit()
+            conn.close()
+            # if "user.id" in e:
+    return jsonify({"result": True})
 
 
 @socketio.on("connect", namespace="/test")

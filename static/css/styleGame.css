@@ -51,10 +51,59 @@ span {
 #wrappedNewR:hover {
   background-color: black;
 }
-#loginButton {
+#loginButton,
+#logoutButton {
   text-decoration: none;
   color: #ffffff;
+  cursor: pointer;
 }
-#loginButton:hover {
+#loginButton:hover,
+#logoutButton:hover {
   text-decoration: underline;
+}
+#logoutButton {
+  margin-left: auto;
+  padding-right: 10px;
+}
+
+.regist_form {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  /* width: 50%; */
+}
+.form {
+  border: 1px solid #777777;
+
+  border-radius: 5px;
+  font-size: 1.7em;
+  margin-bottom: 30px;
+  width: 100%;
+}
+.form:focus {
+  outline: none;
+  border: 2px solid #62b0fa;
+  border-radius: 5px;
+}
+.formWrap {
+  width: 40%;
+  max-width: 300px;
+}
+
+#register {
+  font-size: 1em;
+  /* border: 2px,solid #; */
+  background-color: #548ac9;
+  cursor: pointer;
+  border-radius: 5px;
+  width: 100%;
+  text-align: center;
+}
+
+#regsiterText {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  color: #888888;
 }

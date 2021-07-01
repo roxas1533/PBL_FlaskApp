@@ -12,7 +12,7 @@ conn = pymysql.connect(
 
 try:
     with conn.cursor() as cursor:
-        sql = "SELECT * from members"
+        sql = "SELECT * from user where name='test'"
         cursor.execute(sql)
         result = cursor.fetchall()
         print(result)

@@ -1,0 +1,11 @@
+{% extends "game.html" %}
+{% block loginInfo %}
+<script src="static/js/logout.js"></script>
+
+<div class=component>
+    <div class=login_field>
+        <div id="userProfile">{{username}}</div>
+        <div  id="logoutButton" onclick="logout();">ログアウト</div>
+    </div>
+</div>
+{% endblock %}
