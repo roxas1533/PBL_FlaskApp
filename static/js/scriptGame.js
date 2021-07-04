@@ -211,7 +211,7 @@ function connectServer() {
   let host = window.location.host;
   server = new WebSocket(`ws://${host.replace(/:5000/g, ":3000")}/connect`);
 
-  server.onmessage = (e) => {
+  server.onmessage = async (e) => {
     const data = JSON.parse(e.data);
 
     if (data.id ?? false) {
@@ -225,7 +225,7 @@ function connectServer() {
           if (players.length === 2) {
             let formData = new FormData();
             formData.append("id", InstanceID);
-            fetch(`http://${host.replace(/:5000/g, ":3000")}/getPoint`, {
+            await etch(`http://${host.replace(/:5000/g, ":3000")}/getPoint`, {
               method: "POST",
               mode: "cors",
               body: formData,

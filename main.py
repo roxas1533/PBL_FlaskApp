@@ -1,4 +1,4 @@
-from API import getProfile, getProfileFromName
+from API import getNameSession, getProfile, getProfileFromName
 import os
 import random
 import threading
@@ -88,23 +88,6 @@ def game():
     return res
 
 
-def getNameSession(cookie_str):
-    import hashlib
-    from itsdangerous import URLSafeTimedSerializer
-    from flask.sessions import TaggedJSONSerializer
-
-    salt = "cookie-session"
-    serializer = TaggedJSONSerializer()
-    signer_kwargs = {"key_derivation": "hmac", "digest_method": hashlib.sha1}
-    s = URLSafeTimedSerializer(
-        os.environ["SECRET"].encode(),
-        salt=salt,
-        serializer=serializer,
-        signer_kwargs=signer_kwargs,
-    )
-    return s.loads(cookie_str)
-
-
 @app.route("/getName", methods=["POST"])
 def getName():
     name = getNameSession(request.data.decode("utf-8"))["username"]
@@ -141,7 +124,7 @@ def profile():
         win=p["win"],
         lose=p["lose"],
         cv=p["cv"],
-        win_rato=p["win_rato"] ,
+        win_rato=p["win_rato"],
     )
 
 

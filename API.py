@@ -2,6 +2,7 @@ from flask import (
     request,
     jsonify,
 )
+import os
 
 
 def getProfile(conn, session):
@@ -25,7 +26,7 @@ def getProfileFromName(conn, name):
             "result": True,
             "win": re[0]["win"],
             "lose": re[0]["lose"],
-            "win_rato": win_rato,
+            "win_rato": round(win_rato, 1),
             "cv": re[0]["cv"],
         }
     except Exception as e:
@@ -34,3 +35,20 @@ def getProfileFromName(conn, name):
         return {"result": False, "reason": "不明なエラー"}
     finally:
         cursor.close()
+
+
+def getNameSession(cookie_str):
+    import hashlib
+    from itsdangerous import URLSafeTimedSerializer
+    from flask.sessions import TaggedJSONSerializer
+
+    salt = "cookie-session"
+    serializer = TaggedJSONSerializer()
+    signer_kwargs = {"key_derivation": "hmac", "digest_method": hashlib.sha1}
+    s = URLSafeTimedSerializer(
+        os.environ["SECRET"].encode(),
+        salt=salt,
+        serializer=serializer,
+        signer_kwargs=signer_kwargs,
+    )
+    return s.loads(cookie_str)
