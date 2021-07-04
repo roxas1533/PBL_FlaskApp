@@ -12,7 +12,7 @@ key = {
 }
 import ctypes
 
-libc = ctypes.CDLL("./lib.so")
+# libc = ctypes.CDLL("./lib.so")
 
 
 class Object:
@@ -40,13 +40,13 @@ class Player(Object):
         self.BT = 0
         self.BaseSpeed = 0
 
-    def collisionMap(self, x, y, MapID):
-        a = ctypes.c_double(x)
-        b = ctypes.c_double(y)
-        ret = libc.collisionMap(a, b, MapID)
-        if ret < 0:
-            return -1, -1
-        return ret >> 16, ret & 65535
+    # def collisionMap(self, x, y, MapID):
+    #     a = ctypes.c_double(x)
+    #     b = ctypes.c_double(y)
+    #     ret = libc.collisionMap(a, b, MapID)
+    #     if ret < 0:
+    #         return -1, -1
+    #     return ret >> 16, ret & 65535
 
     def update(self):
 

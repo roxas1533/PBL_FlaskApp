@@ -60,6 +60,10 @@ class Player extends Object {
     this.El = false;
     this.isV = false;
     this.rader = false;
+    this.name = "";
+    this.enemyName = "";
+    this.cv = 0;
+    this.enemyCv = 0;
   }
   draw(c) {
     c.fillStyle = "yellow";
@@ -76,6 +80,41 @@ class Player extends Object {
     c.fill();
   }
 }
+
+class PointObject extends Object {
+  constructor(x, y, vx, txt, cv) {
+    c = canvas.getContext("2d");
+    super(x, y, 300, 70);
+    this.name = txt;
+    this.cv = cv;
+    this.vx = vx;
+    this.m = 0;
+    this.textData = c.measureText(txt);
+    this.textH =
+      this.textData.actualBoundingBoxAscent +
+      this.textData.actualBoundingBoxDescent;
+  }
+  draw(c) {
+    c.fillStyle = "#FFFFFF";
+    c.fillRect(this.x, this.y, this.width, this.height);
+    c.fillStyle = "#999999";
+    c.fillText(this.name, this.textPos, this.y + 5 + this.textH);
+    c.fillStyle = "#888888";
+    c.fillText(this.cv + "連勝", this.textPos, this.y + 15 + this.textH * 2);
+  }
+  update() {
+    if (this.vx != 0)
+      this.textPos =
+        this.vx > 0
+          ? this.x + this.width - this.textData.width - 10
+          : this.x + 10;
+
+    this.x += this.vx;
+    if (this.m >= 250) this.vx = 0;
+    this.m += Math.abs(this.vx);
+  }
+}
+
 var canvas;
 var c;
 var key = 0;
@@ -89,10 +128,11 @@ var pointX = 0;
 var pointY = 0;
 var globalMap;
 var globalPlayers;
-var globalItems;
-var globalBullets;
-var receiveFlag;
-var receiveFlagO;
+let globalItems;
+let globalBullets;
+let receiveFlag;
+let receiveFlagO;
+let InstanceID;
 const BT = [1, 3, 3, 10, 10, 5, 1, 10];
 const ItemColor = [
   "#ff1493",
@@ -136,6 +176,7 @@ const ItemDetail = [
   "貫通弾",
   "レーダー",
 ];
+let renderObject = [];
 function keydown(e) {
   e.preventDefault();
   if (gameScene == 1) {
@@ -161,6 +202,8 @@ function keyUp(e) {
   }
 }
 function connectServer() {
+  renderObject = [];
+
   if (server ?? false) {
     server.close();
   }
@@ -174,12 +217,39 @@ function connectServer() {
     if (data.id ?? false) {
       player = new Player(0, 0, 0, 0, data.id, data.hp);
       globalMap = data.map;
+      InstanceID = data.Iid;
     } else {
       let players = data.player;
       if (gameScene === 0) {
         if (players ?? false) {
           if (players.length === 2) {
+            let formData = new FormData();
+            formData.append("id", InstanceID);
+            fetch(`http://${host.replace(/:5000/g, ":3000")}/getPoint`, {
+              method: "POST",
+              mode: "cors",
+              body: formData,
+            })
+              .then((response) => {
+                return response.json();
+              })
+              .then((res) => {
+                res["player"].forEach((p, _) => {
+                  if (p.ID === player.id) {
+                    player.name = p.Name;
+                    renderObject.push(
+                      new PointObject(-300, 10, 20, p.Name, p.Cv)
+                    );
+                  } else {
+                    player.enemyName = p.Name;
+                    renderObject.push(
+                      new PointObject(500, 100, -20, p.Name, p.Cv)
+                    );
+                  }
+                });
+              });
             gameScene = 1;
+            cycle = 0;
           }
         }
       } else {
@@ -510,7 +580,6 @@ function drawMap(map) {
   });
 }
 function drawBullet(bullets) {
-  // console.log(bullets)
   if (bullets ?? false) {
     bullets.forEach((e, i) => {
       if (!e.IsInvisible || e.ID == player.id) {
@@ -556,74 +625,83 @@ function loop() {
     c.fillStyle = "white";
     c.fillText(t + comma, 250 - c.measureText(t).width / 2, 250);
   } else if (gameScene === 1) {
-    drawBullet(globalBullets);
-    drawMap(globalMap);
+    cycle++;
 
-    if (globalPlayers ?? false) drawPlayers(globalPlayers, globalMap);
-    drawItem(globalItems);
+    if (cycle < 100) {
+      renderObject.forEach((o, i) => {
+        o.update(cycle);
+        o.draw(c);
+      });
+    } else {
+      drawBullet(globalBullets);
+      drawMap(globalMap);
 
-    c.font = "9pt Arial";
-    c.fillStyle = "black";
-    c.fillRect(0, 500, 500, 50);
-    c.strokeStyle = "white";
-    c.beginPath();
-    c.moveTo(0, 500);
-    c.lineTo(500, 500);
-    c.lineWidth = 2;
-    c.stroke();
+      if (globalPlayers ?? false) drawPlayers(globalPlayers, globalMap);
+      drawItem(globalItems);
 
-    if (player.effect > 0) {
-      c.strokeStyle = "blue";
+      c.font = "9pt Arial";
+      c.fillStyle = "black";
+      c.fillRect(0, 500, 500, 50);
+      c.strokeStyle = "white";
       c.beginPath();
       c.moveTo(0, 500);
-      c.lineTo(500 * player.effect, 500);
+      c.lineTo(500, 500);
+      c.lineWidth = 2;
       c.stroke();
-    }
 
-    c.fillStyle = "white";
-    c.fillText("HP", 50, 518);
-    c.fillStyle = "#FF0000";
-    c.fillRect(50, 520, 100, 20);
-    c.fillStyle = "#00FF00";
-    c.fillRect(50, 520, player.hp, 20);
-
-    c.fillStyle = "white";
-    c.fillText("Bullet", 200, 518);
-    c.fillStyle = "gray";
-    c.fillRect(200, 525, 130, 10);
-    c.fillStyle = "white";
-
-    const num = Math.ceil(player.MC / BT[player.BT]);
-    const size = (130 - (num - 1) * 2) / num;
-    for (let i = 0; i < player.C / BT[player.BT]; i++) {
-      c.fillRect(200 + i * (size + 2), 525, size, 10);
-    }
-    c.fillStyle = "white";
-    c.strokeStyle = "white";
-    c.fillText("Item", 370, 518);
-    c.font = "11pt Arial";
-    if (player.itemStock != -1) {
-      c.fillText(ItemDetail[player.itemStock], 400, 538);
-      c.fillStyle = ItemColor[player.itemStock];
-      c.fillRect(370 + 2.5, 520 + 2.5, 15, 15);
-    }
-    c.strokeRect(370, 520, 20, 20);
-    if (chageHp != 0) {
-      if (chageHp == 1)
-        c.fillStyle = `rgba(255,0,0,${(50 - effectTimer) / 90})`;
-      if (chageHp == 2)
-        c.fillStyle = `rgba(0,255,0,${(50 - effectTimer) / 90})`;
-      effectTimer++;
-      c.fillRect(0, 0, 600, 600);
-      if (effectTimer > 50) {
-        chageHp = 0;
-        effectTimer = 0;
+      if (player.effect > 0) {
+        c.strokeStyle = "blue";
+        c.beginPath();
+        c.moveTo(0, 500);
+        c.lineTo(500 * player.effect, 500);
+        c.stroke();
       }
-    }
-    server.send(JSON.stringify({ key: key }));
 
-    receiveFlag = false;
-    receiveFlagO = false;
+      c.fillStyle = "white";
+      c.fillText("HP", 50, 518);
+      c.fillStyle = "#FF0000";
+      c.fillRect(50, 520, 100, 20);
+      c.fillStyle = "#00FF00";
+      c.fillRect(50, 520, player.hp, 20);
+
+      c.fillStyle = "white";
+      c.fillText("Bullet", 200, 518);
+      c.fillStyle = "gray";
+      c.fillRect(200, 525, 130, 10);
+      c.fillStyle = "white";
+
+      const num = Math.ceil(player.MC / BT[player.BT]);
+      const size = (130 - (num - 1) * 2) / num;
+      for (let i = 0; i < player.C / BT[player.BT]; i++) {
+        c.fillRect(200 + i * (size + 2), 525, size, 10);
+      }
+      c.fillStyle = "white";
+      c.strokeStyle = "white";
+      c.fillText("Item", 370, 518);
+      c.font = "11pt Arial";
+      if (player.itemStock != -1) {
+        c.fillText(ItemDetail[player.itemStock], 400, 538);
+        c.fillStyle = ItemColor[player.itemStock];
+        c.fillRect(370 + 2.5, 520 + 2.5, 15, 15);
+      }
+      c.strokeRect(370, 520, 20, 20);
+      if (chageHp != 0) {
+        if (chageHp == 1)
+          c.fillStyle = `rgba(255,0,0,${(50 - effectTimer) / 90})`;
+        if (chageHp == 2)
+          c.fillStyle = `rgba(0,255,0,${(50 - effectTimer) / 90})`;
+        effectTimer++;
+        c.fillRect(0, 0, 600, 600);
+        if (effectTimer > 50) {
+          chageHp = 0;
+          effectTimer = 0;
+        }
+      }
+      server.send(JSON.stringify({ key: key }));
+
+      receiveFlag = false;
+      receiveFlagO = false;
+    }
   } else if (gameScene == 2) {
     button.t = "もう一回";
     server.send(JSON.stringify({ key: 0 }));

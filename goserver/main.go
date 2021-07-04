@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -55,6 +57,7 @@ func main() {
 	bulletType = append(bulletType, constMakeBullet(30, 30, 5, true, 0, 20, 1000, 5))
 	bulletType = append(bulletType, constMakeBullet(5, 5, 1, false, 4, 5, 1000, 6))
 	bulletType = append(bulletType, constMakeBullet(5, 5, 10, false, 4, 2, 30, 7))
+
 	files, _ := ioutil.ReadDir("./")
 	for _, file := range files {
 		path := filepath.Ext(file.Name())
@@ -83,7 +86,9 @@ func main() {
 	// go WriteMessage()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
 	e.GET("/connect", WebsocketGlobalServer)
+	e.POST("/getPoint", getPoint)
 	key["left"] = 1
 	key["up"] = 2
 	key["right"] = 4
@@ -98,6 +103,16 @@ func main() {
 	// 	return c.File("oto.wav")
 	// })
 	e.Logger.Fatal(e.Start(":3000"))
+}
+func getPoint(c echo.Context) error {
+	name := c.FormValue("id")
+	for ins := range instances {
+		id, _ := strconv.Atoi(name)
+		if ins.id == id {
+			return c.JSON(http.StatusOK, ins.rMP)
+		}
+	}
+	return c.String(http.StatusAccepted, "aa")
 }
 
 // type Template struct {
@@ -154,6 +169,9 @@ type player struct {
 	IsAuto         bool
 	IsSpire        bool
 	Rader          bool
+	Name           string
+	sessionId      string
+	Cv             int
 }
 type bullet struct {
 	X         float64 `json:"x"`
@@ -200,8 +218,9 @@ type instance struct {
 	R      bool
 }
 type firstReturn struct {
-	ID  int     `json:"id"`
-	Map [][]int `json:"map"`
+	ID         int     `json:"id"`
+	InstanceID int     `json:"Iid"`
+	Map        [][]int `json:"map"`
 }
 
 var bulletType []bullet
@@ -566,7 +585,7 @@ func loopInstance() {
 							isStun = true
 						}
 					}
-					if &p != nil {
+					if p != nil {
 						if !isStun {
 							if (p.Key & key["left"]) > 0 {
 								p.Vx = -(p.MaxV + p.BaseSpeed)
@@ -627,6 +646,7 @@ func loopInstance() {
 						}
 						p.lastSpace = p.Key & key["space"]
 						if p.Hp <= 0 {
+
 							v.R = true
 							if v.time%2 != 0 {
 								v.time++
@@ -634,22 +654,42 @@ func loopInstance() {
 						}
 					}
 				}
-			}
-			if v.time%2 == 0 {
+				if v.R {
+					for i := 0; i < len(v.rMP.Player); i++ {
+						p := &v.rMP.Player[i]
+						if p.sessionId != "" {
+							client := &http.Client{}
+							if p.sessionId != "" {
+								mysteriousJSON := "{\"sessionid\": \"" + p.sessionId + "\", \"win\":" + strconv.FormatBool(p.Hp > 0) + "}"
+
+								// var i interface{}
+								// json.Unmarshal([]byte(mysteriousJSON), &i)
+								req, _ := http.NewRequest("POST", "http://localhost:5000/pointUpdate", bytes.NewBuffer([]byte(mysteriousJSON)))
+								client.Do(req)
+								// body, _ := io.ReadAll(resp.Body)
+							}
+						}
+
+					}
+				}
+				if v.time%2 == 0 {
+					for _, c := range v.cl {
+						err := c.WriteJSON(v.rMP)
+						if err != nil {
+							c.Close()
+						}
+					}
+				}
+				// if v.time%10 == 0 {
 				for _, c := range v.cl {
-					err := c.WriteJSON(v.rMP)
+					err := c.WriteJSON(v.rMO)
 					if err != nil {
 						c.Close()
 					}
 				}
+
 			}
-			// if v.time%10 == 0 {
-			for _, c := range v.cl {
-				err := c.WriteJSON(v.rMO)
-				if err != nil {
-					c.Close()
-				}
-			}
+
 			// }
 
 		}
@@ -677,6 +717,10 @@ func WebsocketGlobalServer(c echo.Context) error {
 	p.ID = id
 	p.MaxV = 3
 	p.ItemStock = -1
+	session, err := c.Cookie("session")
+	if err == nil {
+		p.sessionId = session.Value
+	}
 	var Cinstance *instance
 	for v := range instances {
 		if len(v.cl) < 2 && !v.isLock {
@@ -702,8 +746,34 @@ func WebsocketGlobalServer(c echo.Context) error {
 		p.Y = 60
 	}
 	var message Message
-	ws.WriteJSON(firstReturn{id, Map[Cinstance.MapID]})
+	ws.WriteJSON(firstReturn{id, Cinstance.id, Map[Cinstance.MapID]})
 	Cinstance.rMP.Player = append(Cinstance.rMP.Player, p)
+
+	if len(Cinstance.cl) > 1 {
+
+		type point struct {
+			Cv       int    `json:"cv"`
+			Username string `json:"username"`
+		}
+
+		for i, p := range Cinstance.rMP.Player {
+			po := point{0, "guest" + strconv.Itoa(rand.Intn(10000))}
+
+			client := &http.Client{}
+			if p.sessionId != "" {
+				req, _ := http.NewRequest("POST", "http://localhost:5000/getName", strings.NewReader(p.sessionId))
+
+				resp, _ := client.Do(req)
+				body, _ := io.ReadAll(resp.Body)
+				json.Unmarshal(body, &po)
+			}
+
+			Cinstance.rMP.Player[i].Cv = po.Cv
+			Cinstance.rMP.Player[i].Name = po.Username
+
+		}
+
+	}
 
 	for {
 		// Read

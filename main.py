@@ -1,3 +1,5 @@
+from API import getProfile, getProfileFromName
+import os
 import random
 import threading
 from client import Client, Instance, addClient, deleteClient, updateKeyboard
@@ -5,12 +7,12 @@ from flask import Flask
 from flask import (
     request,
     render_template,
-    request,
     make_response,
     jsonify,
     session,
     redirect,
     url_for,
+    send_from_directory,
 )
 import time
 import datetime
@@ -28,11 +30,13 @@ log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode="threading")
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+app.secret_key = os.environ["SECRET"].encode()
+from flask_cors import CORS
 
 conn = pymysql.connect(
     host="127.0.0.1",
     unix_socket="/var/run/mysqld/mysqld.sock",
+    port=3306,
     user="root",
     password="root",
     db="sampleDB",
@@ -46,6 +50,33 @@ def hello():
     return render_template("index.html")
 
 
+@app.route("/pointUpdate", methods=["POST"])
+def pointupdate():
+    if request.remote_addr != "127.0.0.1":
+        return jsonify({"reason": "you cannot this API!!"}), 403
+    data = request.data.decode("utf-8")
+    data = json.loads(data)
+    name = getNameSession(data["sessionid"])["username"]
+    win = data["win"]
+    try:
+        with conn.cursor() as cursor:
+            sql = (
+                "update user set win=win+%s ,lose=lose+%s, cv={} where name=%s".format(
+                    "cv+1" if win else 0
+                )
+            )
+            cursor.execute(sql, (win + 0, (not win) + 0, name))
+            # re = cursor.fetchall()
+        return jsonify({"result": True})
+    except Exception as e:
+        e = str(e)
+        print("エラー", e)
+        return jsonify({"result": False, "reason": "不明なエラー"})
+    finally:
+        cursor.close()
+        conn.commit()
+
+
 @app.route("/game", methods=["GET"])
 def game():
     if "username" not in session:
@@ -55,6 +86,31 @@ def game():
             render_template("loginedGame.html", username=session["username"])
         )
     return res
+
+
+def getNameSession(cookie_str):
+    import hashlib
+    from itsdangerous import URLSafeTimedSerializer
+    from flask.sessions import TaggedJSONSerializer
+
+    salt = "cookie-session"
+    serializer = TaggedJSONSerializer()
+    signer_kwargs = {"key_derivation": "hmac", "digest_method": hashlib.sha1}
+    s = URLSafeTimedSerializer(
+        os.environ["SECRET"].encode(),
+        salt=salt,
+        serializer=serializer,
+        signer_kwargs=signer_kwargs,
+    )
+    return s.loads(cookie_str)
+
+
+@app.route("/getName", methods=["POST"])
+def getName():
+    name = getNameSession(request.data.decode("utf-8"))["username"]
+
+    cv = getProfileFromName(conn, name)["cv"]
+    return jsonify({"username": name, "cv": cv})
 
 
 @app.route("/regist", methods=["GET"])
@@ -76,6 +132,19 @@ def loginHtml():
         return render_template("loginedGame.html", username=session["username"])
 
 
+@app.route("/profile", methods=["GET"])
+def profile():
+    p = getProfile(conn, session)
+    return render_template(
+        "profile.html",
+        username=session["username"],
+        win=p["win"],
+        lose=p["lose"],
+        cv=p["cv"],
+        win_rato=p["win_rato"] ,
+    )
+
+
 @app.route("/login", methods=["POST"])
 def login():
     data = json.loads(request.json)
@@ -85,7 +154,6 @@ def login():
             sql = "select * from user where name=%s and password=%s"
             cursor.execute(sql, (data["username"], password))
             re = cursor.fetchall()
-            print(re)
             if len(re) == 0:
                 return jsonify({"result": False, "reason": "ユーザー名またはパスワードが違います"})
             if len(re) > 1:
@@ -96,6 +164,8 @@ def login():
         e = str(e)
         print("エラー", e)
         return jsonify({"result": False, "reason": "不明なエラー"})
+    finally:
+        cursor.close()
 
 
 @app.route("/regist", methods=["POST"])
@@ -126,9 +196,16 @@ def regist():
         finally:
             cursor.close()
             conn.commit()
-            conn.close()
             # if "user.id" in e:
     return jsonify({"result": True})
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, "static/img"),
+        "favicon.ico",
+    )
 
 
 @socketio.on("connect", namespace="/test")

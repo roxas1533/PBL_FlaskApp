@@ -1,7 +1,9 @@
+html,
 body {
   text-align: center;
-  margin: 0px;
-  padding: 0px;
+  padding: 0;
+  margin: 0;
+  height: 100%;
 }
 canvas {
   width: 500px;
@@ -106,4 +108,104 @@ span {
   padding-top: 5px;
   padding-bottom: 5px;
   color: #888888;
+}
+
+.usericon {
+  display: flex;
+  width: 22px;
+  height: 22px;
+  border: solid 1px #ffffff;
+  color: #ffffff;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  margin-right: 5px;
+}
+i::before,
+#userProfile {
+  color: #fff;
+}
+.profileWrap {
+  display: flex;
+  cursor: pointer;
+}
+.profileWrap:hover #userProfile {
+  text-decoration: underline;
+}
+
+#Profile {
+  position: absolute;
+  width: 100vw;
+  height: 100%;
+}
+.overray {
+  width: 100vw;
+  height: auto;
+  height: 100%;
+  background-color: #000000d7;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.profileWrapper {
+  width: 40%;
+  height: 60%;
+  min-width: 300px;
+  min-height: 500px;
+  background-color: #101010;
+  border: 2px solid #59a6ff;
+  border-radius: 3%;
+  color: #888888;
+}
+#close {
+  width: 100%;
+  height: 8%;
+  border-bottom: 1px solid #59a6ff;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.fa-times {
+  font-size: 2em;
+}
+.wrapFas2 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+}
+.wrapFas2:hover {
+  background-color: #7db9f1a7;
+  border-radius: 50%;
+}
+.wrapFas {
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+#ProfileName {
+  margin-left: 20px;
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  color: #fff;
+}
+#rato {
+  width: 100%;
+  height: 10%;
+}
+
+.waku {
+  border-right: 1px solid #888888;
+  width: 20%;
+  height: 100%;
+}
+.point {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

@@ -1,10 +1,19 @@
 {% extends "game.html" %}
 {% block loginInfo %}
 <script src="static/js/logout.js"></script>
+<script src="static/js/profile.js"></script>
+
+<link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
 
 <div class=component>
     <div class=login_field>
-        <div id="userProfile">{{username}}</div>
+        <div class="profileWrap" onclick="openProfile();">
+            <div class="usericon">
+                <i class="fas fa-user"></i>
+            </div>
+            <div id="userProfile">{{username}}</div>
+        </div>
+
         <div  id="logoutButton" onclick="logout();">ログアウト</div>
     </div>
 </div>
