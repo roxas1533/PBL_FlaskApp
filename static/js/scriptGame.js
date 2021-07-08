@@ -115,6 +115,25 @@ class PointObject extends Object {
   }
 }
 
+function loadSkinList() {
+  fetch("http://" + window.location.host + "/getSkinList", {
+    method: "POST",
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        return Promise.reject(new Error("エラーです"));
+      }
+    })
+    .then((res) => {
+      res = JSON.parse(res);
+      skinlist = res["list"];
+      nowSkin = res["skin"];
+      changeSkin = nowSkin;
+    });
+}
+
 var canvas;
 var c;
 var key = 0;
@@ -225,7 +244,7 @@ function connectServer() {
           if (players.length === 2) {
             let formData = new FormData();
             formData.append("id", InstanceID);
-            await etch(`http://${host.replace(/:5000/g, ":3000")}/getPoint`, {
+            await fetch(`http://${host.replace(/:5000/g, ":3000")}/getPoint`, {
               method: "POST",
               mode: "cors",
               body: formData,
@@ -265,6 +284,8 @@ function connectServer() {
   };
 }
 window.onload = () => {
+  loadSkinList();
+
   canvas = document.getElementById("canvas");
   c = canvas.getContext("2d");
   document.addEventListener("keydown", keydown);
@@ -502,13 +523,16 @@ function drawPlayers(players, map) {
       player.El = p.EnemyLaser;
       player.isV = p.IsInvisible;
       player.rader = p.Rader;
-      if (player.hp < player.lastHp) chageHp = 1;
-      else if (player.hp > player.lastHp) chageHp = 2;
+      if (player.hp < player.lastHp) {
+        chageHp = 1;
+        effectTimer = 0;
+      } else if (player.hp > player.lastHp) chageHp = 2;
 
       player.lastHp = p.HP;
       if (p.HP <= 0) {
         gameScene = 2;
         reslutFlag = false;
+        if (typeof loadProfile !== "undefined") loadProfile();
       }
 
       if (p.Laser) drawLaser(p);
@@ -532,6 +556,7 @@ function drawPlayers(players, map) {
       if (p.HP <= 0) {
         gameScene = 2;
         reslutFlag = true;
+        if (typeof loadProfile !== "undefined") loadProfile();
       }
       if (player.El) drawLaser(p);
       if (!p.IsInvisible) dp(p);
@@ -556,13 +581,15 @@ function dp(p) {
         );
     });
   }
-  c.fillStyle = "blue";
-  c.fillRect(p.x + offsetX, p.y + offsetY, p.width, p.height);
+  c.fillStyle = skinlist[p.Skin]["firearm"];
+
   c.save();
   c.translate(p.x + p.width / 2 + offsetX, p.y + p.height / 2 + offsetY);
   c.rotate(p.rotate);
   c.fillRect(-5, 0, 10, 30);
   c.restore();
+  c.fillStyle = skinlist[p.Skin]["body"];
+  c.fillRect(p.x + offsetX, p.y + offsetY, p.width, p.height);
 }
 function drawMap(map) {
   c.fillStyle = "gray";

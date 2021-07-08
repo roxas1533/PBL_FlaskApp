@@ -1,4 +1,11 @@
-from API import getNameSession, getProfile, getProfileFromName
+from API import (
+    getNameSession,
+    getProfile,
+    getProfileFromName,
+    getSkinList,
+    getUserSkin,
+    setSkin,
+)
 import os
 import random
 import threading
@@ -70,7 +77,7 @@ def pointupdate():
         return jsonify({"result": True})
     except Exception as e:
         e = str(e)
-        print("エラー", e)
+        print("pointUpdateエラー", e)
         return jsonify({"result": False, "reason": "不明なエラー"})
     finally:
         cursor.close()
@@ -92,8 +99,9 @@ def game():
 def getName():
     name = getNameSession(request.data.decode("utf-8"))["username"]
 
-    cv = getProfileFromName(conn, name)["cv"]
-    return jsonify({"username": name, "cv": cv})
+    profile = getProfileFromName(conn, name)
+
+    return jsonify({"username": name, "cv": profile["cv"], "skin": profile["skin"]})
 
 
 @app.route("/regist", methods=["GET"])
@@ -128,6 +136,18 @@ def profile():
     )
 
 
+@app.route("/getSkinList", methods=["POST"])
+def GetSkinList():
+    p = getSkinList(conn, session)
+    return jsonify(p)
+
+
+@app.route("/updateSkin", methods=["POST"])
+def UpdateSkin():
+    p = setSkin(conn, session, request.data.decode("utf-8"))
+    return jsonify(p)
+
+
 @app.route("/login", methods=["POST"])
 def login():
     data = json.loads(request.json)
@@ -145,7 +165,7 @@ def login():
         return jsonify({"result": True})
     except Exception as e:
         e = str(e)
-        print("エラー", e)
+        print("loginエラー", e)
         return jsonify({"result": False, "reason": "不明なエラー"})
     finally:
         cursor.close()

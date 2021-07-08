@@ -166,12 +166,13 @@ type player struct {
 	spaceCount     int
 	AddStun        bool
 	AddPoison      bool
-	IsAuto         bool
-	IsSpire        bool
+	isAuto         bool
+	isSpire        bool
 	Rader          bool
 	Name           string
 	sessionId      string
 	Cv             int
+	Skin           int
 }
 type bullet struct {
 	X         float64 `json:"x"`
@@ -267,7 +268,7 @@ func makeBulletL(player *player, r float64, life int) bullet {
 		Damage: d, Life: life, Type: Type,
 		IsStunA:   player.AddStun,
 		IsPoisonA: player.AddPoison,
-		IsSpireA:  player.IsSpire}
+		IsSpireA:  player.isSpire}
 	return bullet
 }
 func shot(player *player, ins *instance, ls int) {
@@ -465,9 +466,9 @@ func endEffect(p *player, id int) {
 	case 15:
 		p.AddPoison = false
 	case 16:
-		p.IsAuto = false
+		p.isAuto = false
 	case 17:
-		p.IsSpire = false
+		p.isSpire = false
 	case 18:
 		p.Rader = false
 	}
@@ -504,10 +505,10 @@ func useItem(itemID int, player *player) {
 		player.AddPoison = true
 		go effectUpdate(player, itemID, 15)
 	case 16:
-		player.IsAuto = true
+		player.isAuto = true
 		go effectUpdate(player, itemID, 3)
 	case 17:
-		player.IsSpire = true
+		player.isSpire = true
 		go effectUpdate(player, itemID, 8)
 	case 18:
 		player.Rader = true
@@ -600,7 +601,7 @@ func loopInstance() {
 								p.Vy = (p.MaxV + p.BaseSpeed)
 							}
 						}
-						if !p.IsAuto {
+						if !p.isAuto {
 							if (p.Key & key["A"]) > 0 {
 								p.R -= 0.02
 							}
@@ -754,10 +755,11 @@ func WebsocketGlobalServer(c echo.Context) error {
 		type point struct {
 			Cv       int    `json:"cv"`
 			Username string `json:"username"`
+			Skin     int
 		}
 
 		for i, p := range Cinstance.rMP.Player {
-			po := point{0, "guest" + strconv.Itoa(rand.Intn(10000))}
+			po := point{0, "guest" + strconv.Itoa(rand.Intn(10000)), 0}
 
 			client := &http.Client{}
 			if p.sessionId != "" {
@@ -770,6 +772,7 @@ func WebsocketGlobalServer(c echo.Context) error {
 
 			Cinstance.rMP.Player[i].Cv = po.Cv
 			Cinstance.rMP.Player[i].Name = po.Username
+			Cinstance.rMP.Player[i].Skin = po.Skin
 
 		}
 
