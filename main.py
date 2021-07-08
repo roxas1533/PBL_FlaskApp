@@ -1,4 +1,5 @@
 from API import (
+    SkinList,
     getNameSession,
     getProfile,
     getProfileFromName,
@@ -40,16 +41,18 @@ socketio = SocketIO(app, async_mode="threading")
 app.secret_key = os.environ["SECRET"].encode()
 from flask_cors import CORS
 
-conn = pymysql.connect(
-    host="127.0.0.1",
-    unix_socket="/var/run/mysqld/mysqld.sock",
-    port=3306,
-    user="root",
-    password="root",
-    db="sampleDB",
-    charset="utf8mb4",
-    cursorclass=pymysql.cursors.DictCursor,
-)
+
+def connectSQL():
+    return pymysql.connect(
+        host="127.0.0.1",
+        unix_socket="/var/run/mysqld/mysqld.sock",
+        port=3306,
+        user="root",
+        password="root",
+        db="sampleDB",
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor,
+    )
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -66,6 +69,7 @@ def pointupdate():
     name = getNameSession(data["sessionid"])["username"]
     win = data["win"]
     try:
+        conn = connectSQL()
         with conn.cursor() as cursor:
             sql = (
                 "update user set win=win+%s ,lose=lose+%s, cv={} where name=%s".format(
@@ -73,15 +77,13 @@ def pointupdate():
                 )
             )
             cursor.execute(sql, (win + 0, (not win) + 0, name))
-            # re = cursor.fetchall()
+        conn.commit()
+        # re = cursor.fetchall()
         return jsonify({"result": True})
     except Exception as e:
         e = str(e)
         print("pointUpdateエラー", e)
         return jsonify({"result": False, "reason": "不明なエラー"})
-    finally:
-        cursor.close()
-        conn.commit()
 
 
 @app.route("/game", methods=["GET"])
@@ -99,6 +101,7 @@ def game():
 def getName():
     name = getNameSession(request.data.decode("utf-8"))["username"]
 
+    conn = connectSQL()
     profile = getProfileFromName(conn, name)
 
     return jsonify({"username": name, "cv": profile["cv"], "skin": profile["skin"]})
@@ -125,6 +128,7 @@ def loginHtml():
 
 @app.route("/profile", methods=["GET"])
 def profile():
+    conn = connectSQL()
     p = getProfile(conn, session)
     return render_template(
         "profile.html",
@@ -138,12 +142,14 @@ def profile():
 
 @app.route("/getSkinList", methods=["POST"])
 def GetSkinList():
+    conn = connectSQL()
     p = getSkinList(conn, session)
     return jsonify(p)
 
 
 @app.route("/updateSkin", methods=["POST"])
 def UpdateSkin():
+    conn = connectSQL()
     p = setSkin(conn, session, request.data.decode("utf-8"))
     return jsonify(p)
 
@@ -153,6 +159,7 @@ def login():
     data = json.loads(request.json)
     password = hashlib.sha256(data["password"].encode("utf-8")).hexdigest()
     try:
+        conn = connectSQL()
         with conn.cursor() as cursor:
             sql = "select * from user where name=%s and password=%s"
             cursor.execute(sql, (data["username"], password))
@@ -167,8 +174,6 @@ def login():
         e = str(e)
         print("loginエラー", e)
         return jsonify({"result": False, "reason": "不明なエラー"})
-    finally:
-        cursor.close()
 
 
 @app.route("/regist", methods=["POST"])
@@ -178,6 +183,7 @@ def regist():
     result = None
     while True:
         try:
+            conn = connectSQL()
             with conn.cursor() as cursor:
                 sql = "insert user (id,name,password) value({},%s,%s)".format(
                     random.randint(0, 100000)
@@ -187,6 +193,7 @@ def regist():
                 sql = "select * from user where name=%s and password=%s"
                 cursor.execute(sql, (data["username"], password))
                 re = cursor.fetchall()
+                conn.commit()
                 session["username"] = re[0]["name"]
                 break
 
@@ -196,9 +203,7 @@ def regist():
                 return jsonify({"result": False, "reason": "既に使用されているユーザー名です"})
             else:
                 return jsonify({"result": False, "reason": "不明なエラー"})
-        finally:
-            cursor.close()
-            conn.commit()
+
             # if "user.id" in e:
     return jsonify({"result": True})
 

@@ -5,28 +5,49 @@ from flask import (
 import os
 
 
+class SkinList:
+    def __init__(self) -> None:
+        self.readSkin
+        self.__skinList = []
+        self.__skinLength = 0
+        self.readSkin()
+
+    def readSkin(self):
+        with open("skinlist.csv") as f:
+            for i, s_line in enumerate(f):
+                if i == 0:
+                    continue
+                s_line = s_line.rstrip(os.linesep)
+                skinData = s_line.split(",")
+                self.__skinList.append({"body": skinData[0], "firearm": skinData[1]})
+        self.__skinLength = len(self.__skinList)
+
+    def getSkinList(self):
+        return self.__skinList
+
+    def __len__(self):
+        return self.__skinLength
+
+
+skinlist = SkinList()
+
+
 def setSkin(conn, session, skinid):
+    skinid = min(len(skinlist) - 1, int(skinid))
     try:
         with conn.cursor() as cursor:
             sql = "update user set skin=%s where name=%s"
             cursor.execute(sql, (skinid, session["username"]))
+        conn.commit()
         return {"result": True}
     except Exception as e:
         e = str(e)
-        print("setSkinエラー", e)
         return {"result": False, "reason": "不明なエラー"}
-    finally:
-        cursor.close()
-        conn.commit()
 
 
 def getSkinList(conn, session):
     return {
-        "list": (
-            {"body": "#0000FF", "firearm": "#0000FF"},
-            {"body": "#FF0000", "firearm": "#FF0000"},
-            {"body": "#00FF00", "firearm": "#00FF00"},
-        ),
+        "list": skinlist.getSkinList(),
         "skin": 0 if "username" not in session else getUserSkin(conn, session),
     }
 
@@ -50,8 +71,6 @@ def getUserSkin(conn, session):
         e = str(e)
         print("getUserSkinエラー", e)
         return {"result": False, "reason": "不明なエラー"}
-    finally:
-        cursor.close()
 
 
 def getProfileFromName(conn, name):
@@ -77,10 +96,8 @@ def getProfileFromName(conn, name):
         }
     except Exception as e:
         e = str(e)
-        print("エラー", e)
+        print("getProfileFromNameエラー", e)
         return {"result": False, "reason": "不明なエラー"}
-    finally:
-        cursor.close()
 
 
 def getNameSession(cookie_str):

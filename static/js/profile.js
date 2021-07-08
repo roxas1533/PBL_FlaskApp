@@ -30,8 +30,9 @@ function openProfile() {
     skin.insertAdjacentHTML(
       "beforeend",
       `<div data-number="${i}" class="skin" onclick="updateSkin()">
+    <div class="example firearm" style="background-color: ${e["firearm"]};"></div>
     <div class="example body" style="background-color: ${e["body"]};"></div>
-    <div class="example firearm" style="background-color: ${e["body"]};"></div>
+
     </div>`
     );
   });
