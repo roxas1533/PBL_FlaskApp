@@ -35,7 +35,7 @@ const (
 )
 
 func constMakeBullet(w int, h int, spread int, iv bool, speed float64, d int, l int, id int) bullet {
-	var b bullet
+	b := bullet{}
 	b.W = w
 	b.H = h
 	b.Spread = spread
@@ -49,7 +49,7 @@ func constMakeBullet(w int, h int, spread int, iv bool, speed float64, d int, l 
 
 func main() {
 
-	bulletType = append(bulletType, constMakeBullet(5, 5, 1, false, 5, 10, 100, 0))
+	bulletType = append(bulletType, bullet{W: 5, H: 5, Spread: 1, IV: false, Vx: 5, Damage: 10, Life: 100, Type: 0})
 	bulletType = append(bulletType, constMakeBullet(20, 20, 3, false, 4, 30, 100, 1))
 	bulletType = append(bulletType, constMakeBullet(5, 5, 3, false, 3, 10, 100, 2))
 	bulletType = append(bulletType, constMakeBullet(5, 5, 10, false, 3, 10, 100, 3))
@@ -163,7 +163,7 @@ type player struct {
 	Count          int
 	Key            int
 	lastSpace      int
-	spaceCount     int
+	SpaceCount     int
 	AddStun        bool
 	AddPoison      bool
 	isAuto         bool
@@ -292,8 +292,25 @@ func shot(player *player, ins *instance, ls int) {
 				ins.rMO.Bullets = append(ins.rMO.Bullets, makeBullet(player, float64(36*i)))
 			}
 		} else if player.BT == 7 {
+
+			w := bulletType[player.BT].W
+			h := bulletType[player.BT].H
+			d := bulletType[player.BT].Damage
+			spread := bulletType[player.BT].Spread
+			iv := bulletType[player.BT].IV
+			Type := bulletType[player.BT].Type
 			for i := 0; i < 50; i++ {
-				ins.rMO.Bullets = append(ins.rMO.Bullets, makeBullet(player, float64(rand.NormFloat64()*15)))
+				s := float64(rand.Intn(7) + 2)
+				ins.rMO.Bullets = append(ins.rMO.Bullets, bullet{
+					X: player.X + float64(player.W/2-w/2) + 30*math.Cos(float64(player.R)+math.Pi/2),
+					Y: player.Y + float64(player.H/2-h/2) + 30*math.Sin(float64(player.R)+math.Pi/2),
+					W: w, H: h, ID: player.ID, Spread: spread, IV: iv,
+					Vx:     s * math.Cos(float64(player.R)+math.Pi/2+deg2rad(float64(rand.NormFloat64()*15))),
+					Vy:     s * math.Sin(float64(player.R)+math.Pi/2+deg2rad(float64(rand.NormFloat64()*15))),
+					Damage: d, Life: bulletType[player.BT].Life + player.BaseBulletLife, Type: Type,
+					IsStunA:   player.AddStun,
+					IsPoisonA: player.AddPoison,
+					IsSpireA:  player.isSpire})
 			}
 		} else {
 			ins.rMO.Bullets = append(ins.rMO.Bullets, makeBullet(player, 0))
@@ -625,22 +642,22 @@ func loopInstance() {
 							p.ItemStock = -1
 						}
 						if p.Key&key["space"] > 0 {
-							p.spaceCount++
-							if p.spaceCount%15 == 0 {
+							p.SpaceCount++
+							if p.SpaceCount%15 == 0 {
 								p.C--
 							}
 						}
 						if p.lastSpace > 0 && (p.Key&key["space"] == 0) {
-							shot(p, v, p.spaceCount)
-							p.spaceCount = 0
+							shot(p, v, p.SpaceCount)
+							p.SpaceCount = 0
 						}
 
 						if (p.Key&key["down"]) == 0 && (p.Key&key["up"]) == 0 {
 							p.Vy = 0
 						}
 
-						playerUpdate(p, p.spaceCount, v.MapID)
-						if p.spaceCount > 10 {
+						playerUpdate(p, p.SpaceCount, v.MapID)
+						if p.SpaceCount > 10 {
 							p.MaxV = 1
 						} else {
 							p.MaxV = 3

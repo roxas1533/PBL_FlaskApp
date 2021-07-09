@@ -64,6 +64,7 @@ class Player extends Object {
     this.enemyName = "";
     this.cv = 0;
     this.enemyCv = 0;
+    this.Sp = 0;
   }
   draw(c) {
     c.fillStyle = "yellow";
@@ -152,6 +153,8 @@ let globalBullets;
 let receiveFlag;
 let receiveFlagO;
 let InstanceID;
+let viewList = [];
+let isLast = false;
 const BT = [1, 3, 3, 10, 10, 5, 1, 10];
 const ItemColor = [
   "#ff1493",
@@ -227,8 +230,9 @@ function connectServer() {
     server.close();
   }
   globalPlayers = undefined;
-  let host = window.location.host;
-  server = new WebSocket(`ws://${host.replace(/:5000/g, ":3000")}/connect`);
+  let host = window.location.host.replace(/:5000/g, ":3000");
+
+  server = new WebSocket(`ws://${host}/connect`);
 
   server.onmessage = async (e) => {
     const data = JSON.parse(e.data);
@@ -244,7 +248,7 @@ function connectServer() {
           if (players.length === 2) {
             let formData = new FormData();
             formData.append("id", InstanceID);
-            await fetch(`http://${host.replace(/:5000/g, ":3000")}/getPoint`, {
+            await fetch(`http://${host}/getPoint`, {
               method: "POST",
               mode: "cors",
               body: formData,
@@ -253,8 +257,11 @@ function connectServer() {
                 return response.json();
               })
               .then((res) => {
-                res["player"].forEach((p, _) => {
+                res["player"].forEach((p, i) => {
                   if (p.ID === player.id) {
+                    if (i != 0) {
+                      isLast = true;
+                    }
                     player.name = p.Name;
                     renderObject.push(
                       new PointObject(-300, 10, 20, p.Name, p.Cv)
@@ -272,9 +279,11 @@ function connectServer() {
           }
         }
       } else {
-        globalBullets = data.bullets;
-        receiveFlagO = true;
-        globalItems = data.item;
+        if (data.item ?? false) {
+          globalBullets = data.bullets;
+          receiveFlagO = true;
+          globalItems = data.item;
+        }
         if (players ?? false) {
           globalPlayers = players;
           receiveFlag = true;
@@ -347,6 +356,65 @@ function drawLaser(p) {
   c.strokeStyle = "red";
   c.lineWidth = 1;
   c.stroke();
+}
+function drawView(p) {
+  viewList = [];
+  for (i = 0; i < 360; i++) {
+    c.beginPath();
+    tX = p.x + p.width / 2;
+    tY = p.y + p.height / 2;
+    const dig = 1;
+    c.moveTo(
+      tX + 30 * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
+      tY + 30 * Math.sin(((i * dig) / 180) * Math.PI) + offsetY
+    );
+    let to = 30;
+    for (; ; to++) {
+      if (
+        globalMap[
+          Math.floor((tY + to * Math.sin(((i * dig) / 180) * Math.PI)) / 30)
+        ][Math.floor((tX + to * Math.cos(((i * dig) / 180) * Math.PI)) / 30)] >
+        0
+      ) {
+        break;
+      }
+    }
+    c.lineTo(
+      tX + to * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
+      tY + to * Math.sin(((i * dig) / 180) * Math.PI) + offsetY
+    );
+    viewList.push([
+      new Point(
+        tX + 30 * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
+        tY + 30 * Math.sin(((i * dig) / 180) * Math.PI) + offsetY
+      ),
+      new Point(
+        tX + to * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
+        tY + to * Math.sin(((i * dig) / 180) * Math.PI) + offsetY
+      ),
+    ]);
+    // c.strokeStyle = "red";
+    // c.lineWidth = 1;
+    // c.stroke();
+  }
+  c.beginPath();
+  c.moveTo(viewList[0][0].x, viewList[0][0].y);
+  c.moveTo(viewList[0][1].x, viewList[0][1].y);
+  c.lineTo(viewList[1][1].x, viewList[1][1].y);
+  c.lineTo(viewList[1][0].x, viewList[1][0].y);
+
+  for (let i = 1; i < viewList.length; i++) {
+    let j = i;
+
+    c.lineTo(viewList[j][1].x, viewList[j][1].y);
+    if (viewList.length - 1 <= j) j = 0;
+    c.lineTo(viewList[j + 1][1].x, viewList[j + 1][1].y);
+    c.lineTo(viewList[j + 1][0].x, viewList[j + 1][0].y);
+  }
+  c.fillStyle = "#333333";
+
+  c.fill();
+  // c.fillStyle = "#FFffffff";
 }
 function drawLightning(x, y) {
   let startX = x,
@@ -465,6 +533,9 @@ function collisionMap(x, y, map) {
 }
 function drawPlayers(players, map) {
   let r = 0;
+  if (isLast) {
+    players = players.reverse();
+  }
   players.forEach((p, i) => {
     if (!receiveFlag) {
       // if ((key & 1) > 0) {
@@ -523,6 +594,7 @@ function drawPlayers(players, map) {
       player.El = p.EnemyLaser;
       player.isV = p.IsInvisible;
       player.rader = p.Rader;
+      player.Sp = p.SpaceCount;
       if (player.hp < player.lastHp) {
         chageHp = 1;
         effectTimer = 0;
@@ -535,7 +607,9 @@ function drawPlayers(players, map) {
         if (typeof loadProfile !== "undefined") loadProfile();
       }
 
-      if (p.Laser) drawLaser(p);
+      // if (p.Laser) drawLaser(p);
+      drawView(p);
+
       if (player.isV) {
         c.strokeStyle = "blue";
         c.save();
@@ -547,7 +621,6 @@ function drawPlayers(players, map) {
         c.fillRect(p.x + offsetX, p.y + offsetY, p.width, p.height);
         c.strokeRect(p.x + offsetX, p.y + offsetY, p.width, p.height);
       } else dp(p);
-
       player.x = p.x;
       player.y = p.y;
       player.width = p.width;
@@ -559,7 +632,11 @@ function drawPlayers(players, map) {
         if (typeof loadProfile !== "undefined") loadProfile();
       }
       if (player.El) drawLaser(p);
+      c.globalCompositeOperation = "source-atop";
+
       if (!p.IsInvisible) dp(p);
+      c.globalCompositeOperation = "source-over";
+
       if (player.rader) r = Math.atan2(p.y - player.y, p.x - player.x);
     }
   });
@@ -589,6 +666,7 @@ function dp(p) {
   c.fillRect(-5, 0, 10, 30);
   c.restore();
   c.fillStyle = skinlist[p.Skin]["body"];
+  // c.fillStyle = "#0000ff01";
   c.fillRect(p.x + offsetX, p.y + offsetY, p.width, p.height);
 }
 function drawMap(map) {
@@ -661,9 +739,12 @@ function loop() {
       });
     } else {
       drawBullet(globalBullets);
-      drawMap(globalMap);
 
       if (globalPlayers ?? false) drawPlayers(globalPlayers, globalMap);
+      c.globalCompositeOperation = "source-over";
+
+      drawMap(globalMap);
+
       drawItem(globalItems);
 
       c.font = "9pt Arial";
@@ -694,6 +775,7 @@ function loop() {
       c.fillStyle = "white";
       c.fillText("Bullet", 200, 518);
       c.fillStyle = "gray";
+      if (player.Sp > 150) c.fillStyle = "red";
       c.fillRect(200, 525, 130, 10);
       c.fillStyle = "white";
 
