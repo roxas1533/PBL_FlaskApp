@@ -137,19 +137,19 @@ type Status struct {
 	LeftTime float32 `json:"Time"`
 }
 type player struct {
-	X              float64  `json:"x"`
-	Y              float64  `json:"y"`
-	W              int      `json:"width"`
-	H              int      `json:"height"`
-	R              float32  `json:"rotate"`
-	Hp             int      `json:"HP"`
-	C              int      `json:"Charge"`
-	MC             int      `json:"MaxCharge"`
-	ID             int      `json:"ID"`
-	BT             int      `json:"BT"`
-	ItemStock      int      `json:"ItemStock"`
-	Effect         float32  `json:"Effect"`
-	Laser          bool     `json:"Laser"`
+	X              float64 `json:"x"`
+	Y              float64 `json:"y"`
+	W              int     `json:"width"`
+	H              int     `json:"height"`
+	R              float32 `json:"rotate"`
+	Hp             int     `json:"HP"`
+	C              int     `json:"Charge"`
+	MC             int     `json:"MaxCharge"`
+	ID             int     `json:"ID"`
+	BT             int     `json:"BT"`
+	ItemStock      int     `json:"ItemStock"`
+	Effect         float32 `json:"Effect"`
+	Show           bool
 	ELaser         bool     `json:"EnemyLaser"`
 	IsInvisible    bool     `json:"IsInvisible"`
 	Status         []Status `json:"Status"`
@@ -471,7 +471,7 @@ func endEffect(p *player, id int) {
 	case 9:
 		p.BaseSpeed -= 3
 	case 10:
-		p.Laser = false
+		p.Show = false
 	case 11:
 		p.ELaser = false
 	case 12:
@@ -504,8 +504,8 @@ func useItem(itemID int, player *player) {
 		player.BaseSpeed += 3
 		go effectUpdate(player, itemID, 10)
 	case 10:
-		player.Laser = true
-		go effectUpdate(player, itemID, 30)
+		player.Show = true
+		go effectUpdate(player, itemID, 23)
 	case 11:
 		player.ELaser = true
 		go effectUpdate(player, itemID, 30)

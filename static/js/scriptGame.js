@@ -60,6 +60,7 @@ class Player extends Object {
     this.El = false;
     this.isV = false;
     this.rader = false;
+    this.show = false;
     this.name = "";
     this.enemyName = "";
     this.cv = 0;
@@ -167,7 +168,7 @@ const ItemColor = [
   "#7cfc00",
   "brown",
   "blue",
-  "#800000",
+  "#25523f",
   "#800000",
   "#90ee90",
   "#ff8c00",
@@ -188,7 +189,7 @@ const ItemDetail = [
   "SHOTGUN",
   "ADDBULLET",
   "加速",
-  "ポインター表示",
+  "敵表示",
   "敵のポインター",
   "透明化",
   "射程増加",
@@ -285,6 +286,9 @@ function connectServer() {
           globalItems = data.item;
         }
         if (players ?? false) {
+          if (isLast) {
+            players = players.reverse();
+          }
           globalPlayers = players;
           receiveFlag = true;
         }
@@ -359,17 +363,17 @@ function drawLaser(p) {
 }
 function drawView(p) {
   viewList = [];
-  for (i = 0; i < 360; i++) {
-    c.beginPath();
+  for (i = 0; i < 720; i++) {
+    // c.beginPath();
     tX = p.x + p.width / 2;
     tY = p.y + p.height / 2;
-    const dig = 1;
-    c.moveTo(
-      tX + 30 * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
-      tY + 30 * Math.sin(((i * dig) / 180) * Math.PI) + offsetY
-    );
+    const dig = 0.5;
+    // c.moveTo(
+    //   tX + 30 * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
+    //   tY + 30 * Math.sin(((i * dig) / 180) * Math.PI) + offsetY
+    // );
     let to = 30;
-    for (; ; to++) {
+    for (; ; to += 1) {
       if (
         globalMap[
           Math.floor((tY + to * Math.sin(((i * dig) / 180) * Math.PI)) / 30)
@@ -379,10 +383,10 @@ function drawView(p) {
         break;
       }
     }
-    c.lineTo(
-      tX + to * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
-      tY + to * Math.sin(((i * dig) / 180) * Math.PI) + offsetY
-    );
+    // c.lineTo(
+    //   tX + to * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
+    //   tY + to * Math.sin(((i * dig) / 180) * Math.PI) + offsetY
+    // );
     viewList.push([
       new Point(
         tX + 30 * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
@@ -411,7 +415,7 @@ function drawView(p) {
     c.lineTo(viewList[j + 1][1].x, viewList[j + 1][1].y);
     c.lineTo(viewList[j + 1][0].x, viewList[j + 1][0].y);
   }
-  c.fillStyle = "#333333";
+  c.fillStyle = "#191919";
 
   c.fill();
   // c.fillStyle = "#FFffffff";
@@ -533,9 +537,7 @@ function collisionMap(x, y, map) {
 }
 function drawPlayers(players, map) {
   let r = 0;
-  if (isLast) {
-    players = players.reverse();
-  }
+
   players.forEach((p, i) => {
     if (!receiveFlag) {
       // if ((key & 1) > 0) {
@@ -594,6 +596,7 @@ function drawPlayers(players, map) {
       player.El = p.EnemyLaser;
       player.isV = p.IsInvisible;
       player.rader = p.Rader;
+      player.show = p.Show;
       player.Sp = p.SpaceCount;
       if (player.hp < player.lastHp) {
         chageHp = 1;
@@ -607,7 +610,6 @@ function drawPlayers(players, map) {
         if (typeof loadProfile !== "undefined") loadProfile();
       }
 
-      // if (p.Laser) drawLaser(p);
       drawView(p);
 
       if (player.isV) {
@@ -632,7 +634,7 @@ function drawPlayers(players, map) {
         if (typeof loadProfile !== "undefined") loadProfile();
       }
       if (player.El) drawLaser(p);
-      c.globalCompositeOperation = "source-atop";
+      if (!player.show) c.globalCompositeOperation = "source-atop";
 
       if (!p.IsInvisible) dp(p);
       c.globalCompositeOperation = "source-over";
@@ -738,10 +740,9 @@ function loop() {
         o.draw(c);
       });
     } else {
-      drawBullet(globalBullets);
-
-      if (globalPlayers ?? false) drawPlayers(globalPlayers, globalMap);
+      drawPlayers(globalPlayers, globalMap);
       c.globalCompositeOperation = "source-over";
+      drawBullet(globalBullets);
 
       drawMap(globalMap);
 
