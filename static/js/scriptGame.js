@@ -200,30 +200,16 @@ const ItemDetail = [
   "レーダー",
 ];
 let renderObject = [];
-function keydown(e) {
-  e.preventDefault();
-  if (gameScene == 1) {
-    if (e.keyCode >= 37 && e.keyCode <= 40)
-      key = key | Math.pow(2, e.keyCode - 37);
-    if (e.keyCode == 32) {
-      key |= Math.pow(2, 4);
-      return false;
-    }
-    if (e.keyCode == 65) key |= Math.pow(2, 5);
-    if (e.keyCode == 68) key |= Math.pow(2, 6);
-    if (e.keyCode === 90) key |= Math.pow(2, 7);
-  }
-  // console.log(e.keyCode) /
-}
-function keyUp(e) {
-  if (gameScene == 1) {
-    if (e.keyCode >= 37 && e.keyCode <= 40) key &= ~Math.pow(2, e.keyCode - 37);
-    if (e.keyCode == 32) key &= ~Math.pow(2, 4);
-    if (e.keyCode == 65) key &= ~Math.pow(2, 5);
-    if (e.keyCode === 68) key &= ~Math.pow(2, 6);
-    if (e.keyCode === 90) key &= ~Math.pow(2, 7);
-  }
-}
+const keyPow = {
+  ArrowLeft: Math.pow(2, 0),
+  ArrowUp: Math.pow(2, 1),
+  ArrowRight: Math.pow(2, 2),
+  ArrowDown: Math.pow(2, 3),
+  q: Math.pow(2, 5),
+  e: Math.pow(2, 6),
+  z: Math.pow(2, 7),
+  " ": Math.pow(2, 4),
+};
 function connectServer() {
   renderObject = [];
 
@@ -301,8 +287,17 @@ window.onload = () => {
 
   canvas = document.getElementById("canvas");
   c = canvas.getContext("2d");
-  document.addEventListener("keydown", keydown);
-  document.addEventListener("keyup", keyUp);
+  document.addEventListener("keydown", (e) => {
+    e.preventDefault();
+    if (gameScene == 1) {
+      if (e.key in keyPow) key |= keyPow[e.key];
+    }
+  });
+  document.addEventListener("keyup", (e) => {
+    if (gameScene == 1) {
+      if (e.key in keyPow) key &= ~keyPow[e.key];
+    }
+  });
   canvas.addEventListener(
     "mousemove",
     function (e) {

@@ -34,29 +34,7 @@ const (
 	Poison
 )
 
-func constMakeBullet(w int, h int, spread int, iv bool, speed float64, d int, l int, id int) bullet {
-	b := bullet{}
-	b.W = w
-	b.H = h
-	b.Spread = spread
-	b.Vx = speed
-	b.IV = iv
-	b.Damage = d
-	b.Life = l
-	b.Type = id
-	return b
-}
-
 func main() {
-
-	bulletType = append(bulletType, bullet{W: 5, H: 5, Spread: 1, IV: false, Vx: 5, Damage: 10, Life: 100, Type: 0})
-	bulletType = append(bulletType, constMakeBullet(20, 20, 3, false, 4, 30, 100, 1))
-	bulletType = append(bulletType, constMakeBullet(5, 5, 3, false, 3, 10, 100, 2))
-	bulletType = append(bulletType, constMakeBullet(5, 5, 10, false, 3, 10, 100, 3))
-	bulletType = append(bulletType, constMakeBullet(5, 5, 10, false, 10, 50, 10000, 4))
-	bulletType = append(bulletType, constMakeBullet(30, 30, 5, true, 0, 20, 1000, 5))
-	bulletType = append(bulletType, constMakeBullet(5, 5, 1, false, 4, 5, 1000, 6))
-	bulletType = append(bulletType, constMakeBullet(5, 5, 10, false, 4, 2, 30, 7))
 
 	files, _ := ioutil.ReadDir("./")
 	for _, file := range files {
@@ -173,25 +151,9 @@ type player struct {
 	sessionId      string
 	Cv             int
 	Skin           int
+	bullet         BulletClass
 }
-type bullet struct {
-	X         float64 `json:"x"`
-	Y         float64 `json:"y"`
-	W         int     `json:"width"`
-	H         int     `json:"height"`
-	ID        int     `json:"ID"`
-	Spread    int     `json:"Spread"`
-	IV        bool    `json:"IsInvisible"`
-	Vx        float64 `json:"vx"`
-	Vy        float64 `json:"vy"`
-	IsStunA   bool    `json:"IsStunA"`
-	IsPoisonA bool    `json:"IsPoisonA"`
-	IsSpireA  bool
-	Damage    int
-	Life      int
-	Dead      bool
-	Type      int
-}
+
 type Item struct {
 	X      float64 `json:"x"`
 	Y      float64 `json:"y"`
@@ -204,8 +166,19 @@ type returnMessagePlayer struct {
 	Player []player `json:"player"`
 }
 type returnMessageOther struct {
-	Bullets []bullet `json:"bullets"`
-	Item    []Item   `json:"item"`
+	Bullets        []Bullet `json:"bullets"`
+	Item           []Item   `json:"item"`
+	wrapperBullets []BulletClass
+}
+
+func (me *returnMessageOther) updateBulletList() {
+	me.Bullets = []Bullet{}
+	for _, b := range me.wrapperBullets {
+		me.Bullets = append(me.Bullets, b.GetMe())
+	}
+}
+func (me *returnMessageOther) Append(b BulletClass) {
+	me.wrapperBullets = append(me.wrapperBullets, b)
 }
 
 type instance struct {
@@ -224,7 +197,7 @@ type firstReturn struct {
 	Map        [][]int `json:"map"`
 }
 
-var bulletType []bullet
+var bulletType = []BulletClass{newMusingun(), newPunchur(), newTriple(), newAround(), newSniper(), newMine(), newReflect(), newShotgun()}
 
 // Map 全体マップ配列
 var Map [][][]int
@@ -248,157 +221,20 @@ func collisionMap(x float64, y float64, MapID int) (int, int) {
 	}
 	return -1, -1
 }
-func makeBullet(player *player, r float64) bullet {
-	return makeBulletL(player, r, bulletType[player.BT].Life+player.BaseBulletLife)
-}
-func makeBulletL(player *player, r float64, life int) bullet {
-	w := bulletType[player.BT].W
-	h := bulletType[player.BT].H
-	d := bulletType[player.BT].Damage
-	s := bulletType[player.BT].Vx
-	spread := bulletType[player.BT].Spread
-	iv := bulletType[player.BT].IV
-	Type := bulletType[player.BT].Type
-	bullet := bullet{
-		X: player.X + float64(player.W/2-w/2) + 30*math.Cos(float64(player.R)+math.Pi/2),
-		Y: player.Y + float64(player.H/2-h/2) + 30*math.Sin(float64(player.R)+math.Pi/2),
-		W: w, H: h, ID: player.ID, Spread: spread, IV: iv,
-		Vx:     s * math.Cos(float64(player.R)+math.Pi/2+deg2rad(r)),
-		Vy:     s * math.Sin(float64(player.R)+math.Pi/2+deg2rad(r)),
-		Damage: d, Life: life, Type: Type,
-		IsStunA:   player.AddStun,
-		IsPoisonA: player.AddPoison,
-		IsSpireA:  player.isSpire}
-	return bullet
-}
 func shot(player *player, ins *instance, ls int) {
-	spread := bulletType[player.BT].Spread
+	spread := player.bullet.GetMe().Spread
 	if player.C > 0 || ls > 150 {
 		if ls > 150 {
-			bullet := bullet{
-				X: player.X + float64(player.W)/2 - 15 + 30*math.Cos(float64(player.R)+math.Pi/2),
-				Y: player.Y + float64(player.H)/2 - 15 + 30*math.Sin(float64(player.R)+math.Pi/2),
-				W: 30, H: 39, ID: player.ID, Spread: spread,
-				Vx:     8 * math.Cos(float64(player.R)+math.Pi/2),
-				Vy:     8 * math.Sin(float64(player.R)+math.Pi/2),
-				Damage: 100, Life: 10000, Type: 0}
-			ins.rMO.Bullets = append(ins.rMO.Bullets, bullet)
-		} else if player.BT == 2 {
-			for i := -1; i < 2; i++ {
-				ins.rMO.Bullets = append(ins.rMO.Bullets, makeBullet(player, float64(i*15)))
-			}
-		} else if player.BT == 3 {
-			for i := 0; i < 10; i++ {
-				ins.rMO.Bullets = append(ins.rMO.Bullets, makeBullet(player, float64(36*i)))
-			}
-		} else if player.BT == 7 {
-
-			w := bulletType[player.BT].W
-			h := bulletType[player.BT].H
-			d := bulletType[player.BT].Damage
-			spread := bulletType[player.BT].Spread
-			iv := bulletType[player.BT].IV
-			Type := bulletType[player.BT].Type
-			for i := 0; i < 50; i++ {
-				s := float64(rand.Intn(7) + 2)
-				ins.rMO.Bullets = append(ins.rMO.Bullets, bullet{
-					X: player.X + float64(player.W/2-w/2) + 30*math.Cos(float64(player.R)+math.Pi/2),
-					Y: player.Y + float64(player.H/2-h/2) + 30*math.Sin(float64(player.R)+math.Pi/2),
-					W: w, H: h, ID: player.ID, Spread: spread, IV: iv,
-					Vx:     s * math.Cos(float64(player.R)+math.Pi/2+deg2rad(float64(rand.NormFloat64()*15))),
-					Vy:     s * math.Sin(float64(player.R)+math.Pi/2+deg2rad(float64(rand.NormFloat64()*15))),
-					Damage: d, Life: bulletType[player.BT].Life + player.BaseBulletLife, Type: Type,
-					IsStunA:   player.AddStun,
-					IsPoisonA: player.AddPoison,
-					IsSpireA:  player.isSpire})
-			}
+			newChargeShot().Shot(player, ins)
 		} else {
-			ins.rMO.Bullets = append(ins.rMO.Bullets, makeBullet(player, 0))
+			player.bullet.Shot(player, ins)
+
 		}
 		player.C -= spread
 		if player.C < 0 {
 			player.C = 0
 		}
 	}
-}
-func bulletsUpdate(ins *instance) {
-	var tb []bullet
-	for _, v := range ins.rMO.Bullets {
-
-		v.Life--
-		v.X += float64(v.Vx)
-		v.Y += float64(v.Vy)
-		flag := false
-		if v.X <= 0 || v.Y <= 0 || v.X >= float64(len(Map[ins.MapID][0])*30) || v.Y >= float64(len(Map[ins.MapID])*30) {
-			continue
-		}
-		for i := 0; i < len(ins.rMP.Player); i++ {
-			if v.ID != ins.rMP.Player[i].ID {
-				p := &ins.rMP.Player[i]
-				if int(p.X) < int(v.X)+v.W && int(p.X)+p.W > int(v.X) && int(p.Y) < int(v.Y)+v.H && int(p.Y)+p.H > int(v.Y) {
-					ins.rMP.Player[i].Hp -= v.Damage
-					flag = true
-					if v.IsStunA && rand.Intn(101) > 60 {
-						status := Status{int(Stun), 62.5 * 3}
-						p.Status = append(p.Status, status)
-					}
-					if v.IsPoisonA {
-						status := Status{int(Poison), 62.5 * 10}
-						p.Status = append(p.Status, status)
-						go timer(10, p, func(p *player) {
-							if rand.Intn(100) > 50 {
-								p.Hp -= rand.Intn(5) + 5
-							}
-						})
-					}
-				}
-			}
-		}
-
-		t := func() bool {
-			if v.Type != 6 {
-				return true
-			}
-			temp := v
-			temp.X -= temp.Vx
-			x := Map[ins.MapID][int(math.Floor(temp.Y/30))][int(math.Floor(temp.X/30))]
-			if x == 0 {
-				v.Vx *= -1
-			} else {
-				v.Vy *= -1
-			}
-			return false
-		}
-		if !v.IsSpireA {
-			if v.W >= 30 {
-				x := math.Ceil(v.X)
-				y := math.Ceil(v.Y)
-				startX := int(math.Max(math.Floor(x/30.0), 0))
-				startY := int(math.Max(math.Floor(y/30.0), 0))
-				endX := int(math.Min(math.Floor((x+float64(v.W)-1.0)/30.0), float64(len(Map[ins.MapID][0]))))
-				endY := int(math.Min(math.Floor((y+float64(v.H)-1.0)/30.0), float64(len(Map[ins.MapID]))))
-				for i := startY; i <= endY; i++ {
-					for j := startX; j <= endX; j++ {
-						if Map[ins.MapID][i][j] > 0 {
-							if t() {
-								flag = true
-								break
-							}
-						}
-					}
-				}
-			} else if Map[ins.MapID][int(math.Floor(v.Y/30))][int(math.Floor(v.X/30))] > 0 {
-				if t() {
-					continue
-				}
-			}
-		}
-		if flag || v.Life < 0 {
-			continue
-		}
-		tb = append(tb, v)
-	}
-	ins.rMO.Bullets = tb
 }
 
 func playerUpdate(player *player, ls int, MapID int) {
@@ -433,7 +269,7 @@ func playerUpdate(player *player, ls int, MapID int) {
 		}
 	}
 	if player.Count%50 == 0 && ls == 0 {
-		player.C += bulletType[player.BT].Spread
+		player.C += player.bullet.GetMe().Spread
 		if player.C > player.MC {
 			player.C = player.MC
 		}
@@ -534,6 +370,7 @@ func useItem(itemID int, player *player) {
 	default:
 		player.MC++
 		player.BT = itemID
+		player.bullet = bulletType[itemID]
 	}
 }
 func itemCollision(ins *instance) {
@@ -592,7 +429,14 @@ func loopInstance() {
 	for {
 		for v := range instances {
 			if !v.R {
-				bulletsUpdate(v)
+				var tempB []BulletClass
+				for _, b := range v.rMO.wrapperBullets {
+					updatedB := b.Update(v)
+					if updatedB != nil {
+						tempB = append(tempB, updatedB)
+					}
+				}
+				v.rMO.wrapperBullets = tempB
 				itemCollision(v)
 				for i := 0; i < len(v.rMP.Player); i++ {
 					p := &v.rMP.Player[i]
@@ -699,6 +543,7 @@ func loopInstance() {
 					}
 				}
 				// if v.time%10 == 0 {
+				v.rMO.updateBulletList()
 				for _, c := range v.cl {
 					err := c.WriteJSON(v.rMO)
 					if err != nil {
@@ -706,9 +551,9 @@ func loopInstance() {
 					}
 				}
 
-			}
+				// }
 
-			// }
+			}
 
 		}
 		time.Sleep(time.Millisecond * 16)
@@ -735,6 +580,7 @@ func WebsocketGlobalServer(c echo.Context) error {
 	p.ID = id
 	p.MaxV = 3
 	p.ItemStock = -1
+	p.bullet = newMusingun()
 	session, err := c.Cookie("session")
 	if err == nil {
 		p.sessionId = session.Value
