@@ -4,6 +4,9 @@
 <script src="static/js/profile.js"></script>
 
 <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&family=Dosis:wght@500&display=swap" rel="stylesheet">
 
 <div class=component>
     <div class=login_field>
@@ -12,6 +15,11 @@
                 <i class="fas fa-user"></i>
             </div>
             <div id="userProfile">{{username}}</div>
+        </div>
+        <div class="settingButton" onclick="openSetting();">
+            <div class="settingicon">
+                <i class="fas fa-cog"></i>
+            </div>
         </div>
 
         <div  id="logoutButton" onclick="logout();">ログアウト</div>

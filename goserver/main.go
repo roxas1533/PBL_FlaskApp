@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -75,11 +76,7 @@ func main() {
 	key["A"] = 32
 	key["D"] = 64
 	key["Z"] = 128
-	// getitem := e.Group("")
-	// getitem.Use(middleware.JWT([]byte(Secret)))
-	// getitem.POST("/api/getItem", func(c echo.Context) error {
-	// 	return c.File("oto.wav")
-	// })
+
 	e.Logger.Fatal(e.Start(":3000"))
 }
 func getPoint(c echo.Context) error {
@@ -92,10 +89,6 @@ func getPoint(c echo.Context) error {
 	}
 	return c.String(http.StatusAccepted, "aa")
 }
-
-// type Template struct {
-// 	templates *template.Template
-// }
 
 var instances = make(map[*instance]bool)
 var upgrader = websocket.Upgrader{
@@ -228,7 +221,6 @@ func shot(player *player, ins *instance, ls int) {
 			newChargeShot().Shot(player, ins)
 		} else {
 			player.bullet.Shot(player, ins)
-
 		}
 		player.C -= spread
 		if player.C < 0 {
@@ -526,7 +518,7 @@ func loopInstance() {
 
 								// var i interface{}
 								// json.Unmarshal([]byte(mysteriousJSON), &i)
-								req, _ := http.NewRequest("POST", "http://localhost:5000/pointUpdate", bytes.NewBuffer([]byte(mysteriousJSON)))
+								req, _ := http.NewRequest("POST", "http://localhost:50000/pointUpdate", bytes.NewBuffer([]byte(mysteriousJSON)))
 								client.Do(req)
 								// body, _ := io.ReadAll(resp.Body)
 							}
@@ -585,6 +577,7 @@ func WebsocketGlobalServer(c echo.Context) error {
 	if err == nil {
 		p.sessionId = session.Value
 	}
+	fmt.Printf("%p", ws)
 	var Cinstance *instance
 	for v := range instances {
 		if len(v.cl) < 2 && !v.isLock {
@@ -626,8 +619,7 @@ func WebsocketGlobalServer(c echo.Context) error {
 
 			client := &http.Client{}
 			if p.sessionId != "" {
-				req, _ := http.NewRequest("POST", "http://localhost:5000/getName", strings.NewReader(p.sessionId))
-
+				req, _ := http.NewRequest("POST", "http://localhost/getName", strings.NewReader(p.sessionId))
 				resp, _ := client.Do(req)
 				body, _ := io.ReadAll(resp.Body)
 				json.Unmarshal(body, &po)

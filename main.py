@@ -6,6 +6,7 @@ from API import (
     getSkinList,
     getUserSkin,
     setSkin,
+    secret_key,
 )
 import os
 import random
@@ -38,7 +39,8 @@ log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode="threading")
-app.secret_key = os.environ["SECRET"].encode()
+# app.secret_key = os.environ["SECRET"].encode()
+app.secret_key = secret_key
 from flask_cors import CORS
 
 
@@ -48,11 +50,14 @@ def connectSQL():
         unix_socket="/var/run/mysqld/mysqld.sock",
         port=3306,
         user="root",
-        password="root",
+        password="",
         db="sampleDB",
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
     )
+
+
+defaultSetting = None
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -137,6 +142,33 @@ def profile():
         lose=p["lose"],
         cv=p["cv"],
         win_rato=p["win_rato"],
+    )
+
+
+@app.route("/setting", methods=["POST"])
+def setting():
+    if "username" not in session:
+        raise ValueError("login_error!")
+
+    conn = connectSQL()
+
+    with conn.cursor() as cursor:
+        cursor.execute("select * from settings where name=%s", session["username"])
+        re = cursor.fetchall()
+        if len(re) != 1:
+            raise ValueError("error!")
+    re = re[0]
+    settingmain = render_template(
+        "setting.html",
+    )
+    gamesetting = render_template(
+        "gamesetting.html",
+    )
+    keysetting = render_template(
+        "keysetting.html",
+    )
+    return jsonify(
+        {"main": settingmain, "game": gamesetting, "key": keysetting, "setting": re}
     )
 
 
@@ -249,6 +281,17 @@ def handle_message(data):
     updateKeyboard(data[0], request.sid, data[1])
 
 
+def updateDefaultSetting():
+    conn = connectSQL()
+    with conn.cursor() as cursor:
+        cursor.execute("select * from settings where name='default'")
+        re = cursor.fetchall()
+        if len(re) != 1:
+            raise ValueError("error!")
+    return re[0]
+
+
 if __name__ == "__main__":
     # app.run(debug=True)
+    defaultSetting = updateDefaultSetting()
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)

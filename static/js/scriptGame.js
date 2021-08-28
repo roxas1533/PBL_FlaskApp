@@ -217,7 +217,7 @@ function connectServer() {
     server.close();
   }
   globalPlayers = undefined;
-  let host = window.location.host.replace(/:5000/g, ":3000");
+  let host = window.location.host + ":3000";
 
   server = new WebSocket(`ws://${host}/connect`);
 

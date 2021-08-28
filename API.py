@@ -4,6 +4,8 @@ from flask import (
 )
 import os
 
+secret_key = '_5#y2L"F43A8\n\0Sek;:"!\@'
+
 
 class SkinList:
     def __init__(self) -> None:
@@ -13,7 +15,7 @@ class SkinList:
         self.readSkin()
 
     def readSkin(self):
-        with open("skinlist.csv") as f:
+        with open("/home/java/pbl/skinlist.csv") as f:
             for i, s_line in enumerate(f):
                 if i == 0:
                     continue
@@ -109,7 +111,7 @@ def getNameSession(cookie_str):
     serializer = TaggedJSONSerializer()
     signer_kwargs = {"key_derivation": "hmac", "digest_method": hashlib.sha1}
     s = URLSafeTimedSerializer(
-        os.environ["SECRET"].encode(),
+        secret_key,
         salt=salt,
         serializer=serializer,
         signer_kwargs=signer_kwargs,

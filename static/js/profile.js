@@ -1,8 +1,12 @@
 let profile;
+let settingpage, gamesetting, keysetting;
 let skinlist;
 let nowSkin;
 let changeSkin;
-window.addEventListener("load", function () {
+let nowSetting = 0;
+let setting;
+let tempSetting;
+window.addEventListener("DOMContentLoaded", function () {
   loadProfile();
 });
 function loadProfile() {
@@ -19,6 +23,21 @@ function loadProfile() {
     .then((res) => {
       profile = res;
     });
+
+  fetch("http://" + window.location.host + "/setting", {
+    method: "POST",
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+    })
+    .then((res) => {
+      settingpage = res["main"];
+      gamesetting = res["game"];
+      keysetting = res["key"];
+      setting = res["setting"];
+    });
 }
 
 function openProfile() {
@@ -32,12 +51,18 @@ function openProfile() {
       `<div data-number="${i}" class="skin" onclick="updateSkin()">
     <div class="example firearm" style="background-color: ${e["firearm"]};"></div>
     <div class="example body" style="background-color: ${e["body"]};"></div>
-
     </div>`
     );
   });
 
   skin.children[nowSkin].classList.add("nowSkin");
+}
+
+function openSetting() {
+  const body = document.querySelector("html body");
+  body.insertAdjacentHTML("afterbegin", settingpage);
+  tempSetting = JSON.parse(JSON.stringify(setting));
+  changesetting(document.getElementById("0"));
 }
 
 function updateSkin() {
@@ -71,4 +96,95 @@ function deleteProfile() {
   }
   const profile = document.getElementById("Profile");
   profile.remove();
+}
+
+function changesetting(obj) {
+  const profile = document.getElementById("settingWrapper");
+  const settingname = document.getElementById("settingname");
+  settingname.innerHTML = obj.innerHTML;
+  if (profile ?? false) profile.remove();
+  const settingcontent = document.getElementById("settingcontent");
+  switch (obj.id) {
+    case "0":
+      settingcontent.insertAdjacentHTML("afterbegin", gamesetting);
+      viewnum = document.getElementById("viewnum");
+      show_damage = document.getElementById("cb_toggle_switch");
+      show_damage.checked = tempSetting["show_damage"];
+      viewnum.value = tempSetting["view_num"];
+      show_damage.addEventListener("change", (e) => {
+        tempSetting["show_damage"] = +show_damage.checked;
+      });
+      num = document.getElementById("num");
+      num.innerText = viewnum.value;
+      viewnum.addEventListener("input", (e) => {
+        num.innerText = e.target.value;
+        tempSetting["view_num"] = e.target.value;
+      });
+      break;
+    case "1":
+      settingcontent.insertAdjacentHTML("afterbegin", keysetting);
+      let keys = document.getElementsByClassName("key");
+      Array.prototype.forEach.call(keys, (e) => {
+        e.innerHTML = tempSetting[e.id];
+      });
+      break;
+  }
+  obj.style.color = "white";
+  obj.style.border = "solid 2px #59a6ff";
+  obj.style.background = "#2c2c2c";
+  nowSetting = obj.id;
+
+  const settinglist = document.getElementById("settinglist");
+  settinglists = settinglist.childNodes;
+  settinglists.forEach((e) => {
+    if (e.nodeName != "#text") {
+      if (nowSetting != e.id) {
+        e.style.color = "#888888";
+        e.style.border = "solid 1px #888888";
+        e.style.background = "none";
+        e.addEventListener(
+          "mouseenter",
+          () => {
+            e.style.background = "#2c2c2c";
+          },
+          false
+        );
+        e.addEventListener(
+          "mouseleave",
+          () => {
+            e.style.background = "none";
+          },
+          false
+        );
+      }
+    }
+    // console.log(e.id);
+  });
+  // console.log(obj.id);
+}
+
+function changeKey(obj) {
+  const body = document.querySelector("html body");
+  body.insertAdjacentHTML(
+    "afterend",
+    `<div class="overray" tabindex="0" id=keyoverray onclick="this.remove()" style="flex-direction: column;">
+  <h1 style="color:white;">割り当てるキーを入力してください。</h1>
+  <div class="spinner-box">
+  <div class="configure-border-1"></div>  
+  <div class="configure-border-2"></div>
+</div>
+    </div>`
+  );
+  const keyoverray = document.getElementById("keyoverray");
+  keyoverray.focus();
+  keyoverray.addEventListener("keyup", (e) => {
+    obj.innerHTML = `${e.key == " " ? "SPACE" : e.key}`.toUpperCase();
+    tempSetting[obj.id] = obj.innerHTML;
+    keyoverray.remove();
+  });
+}
+
+function updateSetting() {
+  setting = tempSetting;
+  deleteProfile();
 }
