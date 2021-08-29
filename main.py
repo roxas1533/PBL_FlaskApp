@@ -7,6 +7,7 @@ from API import (
     getUserSkin,
     setSkin,
     secret_key,
+    setSetting,
 )
 import os
 import random
@@ -168,7 +169,13 @@ def setting():
         "keysetting.html",
     )
     return jsonify(
-        {"main": settingmain, "game": gamesetting, "key": keysetting, "setting": re}
+        {
+            "main": settingmain,
+            "game": gamesetting,
+            "key": keysetting,
+            "setting": re,
+            "defaultSetting": defaultSetting,
+        }
     )
 
 
@@ -183,6 +190,13 @@ def GetSkinList():
 def UpdateSkin():
     conn = connectSQL()
     p = setSkin(conn, session, request.data.decode("utf-8"))
+    return jsonify(p)
+
+
+@app.route("/updateSetting", methods=["POST"])
+def updateSetting():
+    conn = connectSQL()
+    p = setSetting(conn, session, request.data.decode("utf-8"))
     return jsonify(p)
 
 

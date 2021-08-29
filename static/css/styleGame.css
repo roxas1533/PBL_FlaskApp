@@ -5,6 +5,31 @@ body {
   margin: 0;
   height: 100%;
 }
+#loading {
+  width: 100vw;
+  height: auto;
+  height: 100%;
+  background-color: #000000;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.fadeout {
+  animation: fadeOut 0.3s;
+  animation-fill-mode: both;
+}
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 canvas {
   width: 500px;
   height: 550px;

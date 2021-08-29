@@ -1,15 +1,36 @@
 let profile;
-let settingpage, gamesetting, keysetting;
 let skinlist;
 let nowSkin;
 let changeSkin;
 let nowSetting = 0;
+
+class Setting {
+  constructor(settingpage, gamesetting, keysetting, setting, defaultSetting) {
+    this.settingpage = settingpage;
+    this.gamesetting = gamesetting;
+    this.keysetting = keysetting;
+    this.setting = setting;
+    this.tempSetting = setting;
+    this.defaultSetting = defaultSetting;
+  }
+  stackSetting() {
+    this.tempSetting = JSON.parse(JSON.stringify(this.setting));
+  }
+  updateSetting() {
+    this.setting = JSON.parse(JSON.stringify(this.tempSetting));
+  }
+  setDef() {
+    this.tempSetting = JSON.parse(JSON.stringify(this.defaultSetting));
+  }
+}
+
 let setting;
-let tempSetting;
-window.addEventListener("DOMContentLoaded", function () {
+
+window.addEventListener("DOMContentLoaded", () => {
   loadProfile();
 });
-function loadProfile() {
+async function loadProfile() {
+  loadingDOM = document.getElementById("loading");
   fetch("http://" + window.location.host + "/profile", {
     method: "GET",
   })
@@ -24,7 +45,7 @@ function loadProfile() {
       profile = res;
     });
 
-  fetch("http://" + window.location.host + "/setting", {
+  await fetch("http://" + window.location.host + "/setting", {
     method: "POST",
   })
     .then((response) => {
@@ -33,11 +54,19 @@ function loadProfile() {
       }
     })
     .then((res) => {
-      settingpage = res["main"];
-      gamesetting = res["game"];
-      keysetting = res["key"];
-      setting = res["setting"];
+      setting = new Setting(
+        res["main"],
+        res["game"],
+        res["key"],
+        res["setting"],
+        res["defaultSetting"]
+      );
     });
+
+  loadingDOM.classList.add("fadeout");
+  setTimeout(function () {
+    loadingDOM.remove();
+  }, 300);
 }
 
 function openProfile() {
@@ -60,8 +89,8 @@ function openProfile() {
 
 function openSetting() {
   const body = document.querySelector("html body");
-  body.insertAdjacentHTML("afterbegin", settingpage);
-  tempSetting = JSON.parse(JSON.stringify(setting));
+  body.insertAdjacentHTML("afterbegin", setting.settingpage);
+  setting.stackSetting();
   changesetting(document.getElementById("0"));
 }
 
@@ -106,26 +135,26 @@ function changesetting(obj) {
   const settingcontent = document.getElementById("settingcontent");
   switch (obj.id) {
     case "0":
-      settingcontent.insertAdjacentHTML("afterbegin", gamesetting);
+      settingcontent.insertAdjacentHTML("afterbegin", setting.gamesetting);
       viewnum = document.getElementById("viewnum");
       show_damage = document.getElementById("cb_toggle_switch");
-      show_damage.checked = tempSetting["show_damage"];
-      viewnum.value = tempSetting["view_num"];
+      show_damage.checked = setting.tempSetting["show_damage"];
+      viewnum.value = setting.tempSetting["view_num"];
       show_damage.addEventListener("change", (e) => {
-        tempSetting["show_damage"] = +show_damage.checked;
+        setting.tempSetting["show_damage"] = +show_damage.checked;
       });
       num = document.getElementById("num");
       num.innerText = viewnum.value;
       viewnum.addEventListener("input", (e) => {
         num.innerText = e.target.value;
-        tempSetting["view_num"] = e.target.value;
+        setting.tempSetting["view_num"] = e.target.value;
       });
       break;
     case "1":
-      settingcontent.insertAdjacentHTML("afterbegin", keysetting);
+      settingcontent.insertAdjacentHTML("afterbegin", setting.keysetting);
       let keys = document.getElementsByClassName("key");
       Array.prototype.forEach.call(keys, (e) => {
-        e.innerHTML = tempSetting[e.id];
+        e.innerHTML = setting.tempSetting[e.id];
       });
       break;
   }
@@ -179,12 +208,25 @@ function changeKey(obj) {
   keyoverray.focus();
   keyoverray.addEventListener("keyup", (e) => {
     obj.innerHTML = `${e.key == " " ? "SPACE" : e.key}`.toUpperCase();
-    tempSetting[obj.id] = obj.innerHTML;
+    setting.tempSetting[obj.id] = obj.innerHTML;
     keyoverray.remove();
   });
 }
 
 function updateSetting() {
-  setting = tempSetting;
+  setting.updateSetting();
+  fetch("http://" + window.location.host + "/updateSetting", {
+    method: "POST",
+    body: JSON.stringify(setting.setting),
+  }).then((response) => {
+    if (!response.ok) {
+      return Promise.reject(new Error("エラーです"));
+    }
+  });
   deleteProfile();
+}
+
+function resertDefault() {
+  setting.setDef();
+  changesetting(document.getElementById("0"));
 }

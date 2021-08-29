@@ -95,6 +95,8 @@ class PointObject extends Object {
     this.textH =
       this.textData.actualBoundingBoxAscent +
       this.textData.actualBoundingBoxDescent;
+    this.isDead = false;
+    this.time = 0;
   }
   draw(c) {
     c.fillStyle = "#FFFFFF";
@@ -105,6 +107,7 @@ class PointObject extends Object {
     c.fillText(this.cv + "連勝", this.textPos, this.y + 15 + this.textH * 2);
   }
   update() {
+    this.time++;
     if (this.vx != 0)
       this.textPos =
         this.vx > 0
@@ -114,6 +117,7 @@ class PointObject extends Object {
     this.x += this.vx;
     if (this.m >= 250) this.vx = 0;
     this.m += Math.abs(this.vx);
+    if (this.time >= 100) this.isDead = true;
   }
 }
 
@@ -140,6 +144,7 @@ var canvas;
 var c;
 var key = 0;
 var player;
+var ePlayer;
 var server = null;
 var offsetX = 0;
 var offsetY = 0;
@@ -233,6 +238,7 @@ function connectServer() {
       if (gameScene === 0) {
         if (players ?? false) {
           if (players.length === 2) {
+            ePlayer = new Player(0, 0, 0, 0, null, data.hp);
             let formData = new FormData();
             formData.append("id", InstanceID);
             await fetch(`http://${host}/getPoint`, {
@@ -623,11 +629,14 @@ function drawPlayers(players, map) {
       player.width = p.width;
       player.height = p.height;
     } else {
+      //敵
+      ePlayer.hp = p.HP;
       if (p.HP <= 0) {
         gameScene = 2;
         reslutFlag = true;
         if (typeof loadProfile !== "undefined") loadProfile();
       }
+
       if (player.El) drawLaser(p);
       if (!player.show) c.globalCompositeOperation = "source-atop";
 
@@ -635,6 +644,8 @@ function drawPlayers(players, map) {
       c.globalCompositeOperation = "source-over";
 
       if (player.rader) r = Math.atan2(p.y - player.y, p.x - player.x);
+
+      ePlayer.lastHp = p.HP;
     }
   });
   if (player.rader) drawArrow(player, r + Math.PI / 2);
@@ -729,12 +740,16 @@ function loop() {
   } else if (gameScene === 1) {
     cycle++;
 
-    if (cycle < 100) {
-      renderObject.forEach((o, i) => {
-        o.update(cycle);
-        o.draw(c);
-      });
-    } else {
+    let i = renderObject.length;
+    while (i--) {
+      renderObject[i].update(cycle);
+      renderObject[i].draw(c);
+      if (renderObject[i].isDead) {
+        renderObject.splice(i, 1);
+      }
+    }
+
+    if (cycle >= 100) {
       drawPlayers(globalPlayers, globalMap);
       c.globalCompositeOperation = "source-over";
       drawBullet(globalBullets);

@@ -3,6 +3,7 @@ from flask import (
     jsonify,
 )
 import os
+import json
 
 secret_key = '_5#y2L"F43A8\n\0Sek;:"!\@'
 
@@ -40,10 +41,41 @@ def setSkin(conn, session, skinid):
         with conn.cursor() as cursor:
             sql = "update user set skin=%s where name=%s"
             cursor.execute(sql, (skinid, session["username"]))
-        conn.commit()
+            conn.commit()
         return {"result": True}
     except Exception as e:
         e = str(e)
+        return {"result": False, "reason": "不明なエラー"}
+
+
+def setSetting(conn, session, setting):
+    try:
+        setting = json.loads(setting)
+        with conn.cursor() as cursor:
+            sql = "update settings set show_damage=%s,view_num=%s,upkey=%s,downkey=%s,rightkey=%s,\
+                leftkey=%s,firekey=%s,useitemkey=%s,rightarmrkey=%s,leftarmrkey=%s \
+                where name=%s"
+            cursor.execute(
+                sql,
+                (
+                    setting["show_damage"],
+                    setting["view_num"],
+                    setting["upkey"],
+                    setting["downkey"],
+                    setting["rightkey"],
+                    setting["leftkey"],
+                    setting["firekey"],
+                    setting["useitemkey"],
+                    setting["rightarmrkey"],
+                    setting["leftarmrkey"],
+                    session["username"],
+                ),
+            )
+            conn.commit()
+        return {"result": True}
+    except Exception as e:
+        e = str(e)
+        print(e)
         return {"result": False, "reason": "不明なエラー"}
 
 
