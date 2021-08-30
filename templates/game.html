@@ -1,17 +1,19 @@
-<html>
+<html lang="ja-jp">
 
 <head>
     <title>DUEL</title>
     <link rel="stylesheet" type="text/css" href="static/css/styleGame.css">
-
+    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
+    <script src="static/js/loading.js"></script>
 </head>
 
 <body>
+<div id=loading></div>
+
     {% block loginInfo %}{% endblock %}
 
 
     <canvas id="canvas" width="500" height="550"></canvas>
-    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
     <script src="static/js/scriptGame.js"></script>
     <table align="center">
         <caption>

@@ -4,53 +4,6 @@ let nowSkin;
 let changeSkin;
 let nowSetting = 0;
 
-class Setting {
-  constructor(settingpage, gamesetting, keysetting, setting, defaultSetting) {
-    this.settingpage = settingpage;
-    this.gamesetting = gamesetting;
-    this.keysetting = keysetting;
-    this.setting = setting;
-    this.tempSetting = setting;
-    this.defaultSetting = defaultSetting;
-  }
-  stackSetting() {
-    this.tempSetting = JSON.parse(JSON.stringify(this.setting));
-  }
-  updateSetting() {
-    this.setting = JSON.parse(JSON.stringify(this.tempSetting));
-  }
-  setDef() {
-    this.tempSetting = JSON.parse(JSON.stringify(this.defaultSetting));
-  }
-}
-
-let setting;
-
-window.addEventListener("DOMContentLoaded", () => {
-  loadingDOM = document.getElementById("loading");
-  loadProfile();
-  fetch("http://" + window.location.host + "/setting", {
-    method: "POST",
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-    })
-    .then((res) => {
-      setting = new Setting(
-        res["main"],
-        res["game"],
-        res["key"],
-        res["setting"],
-        res["defaultSetting"]
-      );
-    });
-  loadingDOM.classList.add("fadeout");
-  setTimeout(function () {
-    loadingDOM.remove();
-  }, 300);
-});
 async function loadProfile() {
   fetch("http://" + window.location.host + "/profile", {
     method: "GET",

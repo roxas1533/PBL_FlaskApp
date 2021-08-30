@@ -38,6 +38,18 @@ import logging
 
 log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
+
+
+def updateDefaultSetting():
+    conn = connectSQL()
+    with conn.cursor() as cursor:
+        cursor.execute("select * from settings where name='default'")
+        re = cursor.fetchall()
+        if len(re) != 1:
+            raise ValueError("error!")
+    return re[0]
+
+
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode="threading")
 # app.secret_key = os.environ["SECRET"].encode()
@@ -59,6 +71,7 @@ def connectSQL():
 
 
 defaultSetting = None
+defaultSetting = updateDefaultSetting()
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -149,7 +162,15 @@ def profile():
 @app.route("/setting", methods=["POST"])
 def setting():
     if "username" not in session:
-        return defaultSetting
+        return jsonify(
+            {
+                "main": None,
+                "game": None,
+                "key": None,
+                "setting": defaultSetting,
+                "defaultSetting": defaultSetting,
+            }
+        )
 
     conn = connectSQL()
 
@@ -295,17 +316,6 @@ def handle_message(data):
     updateKeyboard(data[0], request.sid, data[1])
 
 
-def updateDefaultSetting():
-    conn = connectSQL()
-    with conn.cursor() as cursor:
-        cursor.execute("select * from settings where name='default'")
-        re = cursor.fetchall()
-        if len(re) != 1:
-            raise ValueError("error!")
-    return re[0]
-
-
 if __name__ == "__main__":
     # app.run(debug=True)
-    defaultSetting = updateDefaultSetting()
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
