@@ -312,7 +312,7 @@ func newPunchur() *Punchur {
 	me := Punchur{Bullet: *newBullet().(*Bullet)}
 	me.W = 20
 	me.H = 20
-	me.Damage = 10
+	me.Damage = 15
 	me.Spread = 3
 	me.Type = 1
 	me.Life = 100

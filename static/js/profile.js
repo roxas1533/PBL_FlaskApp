@@ -27,25 +27,9 @@ class Setting {
 let setting;
 
 window.addEventListener("DOMContentLoaded", () => {
-  loadProfile();
-});
-async function loadProfile() {
   loadingDOM = document.getElementById("loading");
-  fetch("http://" + window.location.host + "/profile", {
-    method: "GET",
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.text();
-      } else {
-        return Promise.reject(new Error("エラーです"));
-      }
-    })
-    .then((res) => {
-      profile = res;
-    });
-
-  await fetch("http://" + window.location.host + "/setting", {
+  loadProfile();
+  fetch("http://" + window.location.host + "/setting", {
     method: "POST",
   })
     .then((response) => {
@@ -62,11 +46,25 @@ async function loadProfile() {
         res["defaultSetting"]
       );
     });
-
   loadingDOM.classList.add("fadeout");
   setTimeout(function () {
     loadingDOM.remove();
   }, 300);
+});
+async function loadProfile() {
+  fetch("http://" + window.location.host + "/profile", {
+    method: "GET",
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        return Promise.reject(new Error("エラーです"));
+      }
+    })
+    .then((res) => {
+      profile = res;
+    });
 }
 
 function openProfile() {

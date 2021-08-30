@@ -83,20 +83,59 @@ class Player extends Object {
   }
 }
 
-class PointObject extends Object {
+class RenderObject extends Object {
+  constructor(x, y, h, w) {
+    c = canvas.getContext("2d");
+    super(x, y, h, w);
+    this.vx = 0;
+    this.vy = 0;
+    this.isDead = false;
+    this.time = 0;
+  }
+  draw(c) {}
+  update() {
+    this.time++;
+  }
+}
+
+class DamageNum extends RenderObject {
+  constructor(x, y, num) {
+    c = canvas.getContext("2d");
+    super(x, y, 0, 0);
+    this.num = num;
+    this.vx = Math.random() * 7 - 3.5;
+    this.vy = -(Math.random() * 5 + 2);
+    this.g = 0.6;
+    this.alpha = 1.0;
+  }
+  draw(c) {
+    // c.font = "20pt Dosis";
+    c.fillStyle = `rgba(255,255,255,${this.alpha})`;
+    c.fillText(this.num, this.x + offsetX, this.y + offsetY);
+  }
+  update() {
+    super.update();
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += this.g;
+    this.vy = Math.min(this.vy, 6);
+    if (this.time > 17) this.alpha -= 0.2;
+    if (this.time > 22) this.isDead = true;
+  }
+}
+
+class PointObject extends RenderObject {
   constructor(x, y, vx, txt, cv) {
     c = canvas.getContext("2d");
     super(x, y, 300, 70);
     this.name = txt;
     this.cv = cv;
-    this.vx = vx;
     this.m = 0;
+    this.vx = vx;
     this.textData = c.measureText(txt);
     this.textH =
       this.textData.actualBoundingBoxAscent +
       this.textData.actualBoundingBoxDescent;
-    this.isDead = false;
-    this.time = 0;
   }
   draw(c) {
     c.fillStyle = "#FFFFFF";
@@ -107,7 +146,7 @@ class PointObject extends Object {
     c.fillText(this.cv + "連勝", this.textPos, this.y + 15 + this.textH * 2);
   }
   update() {
-    this.time++;
+    super.update();
     if (this.vx != 0)
       this.textPos =
         this.vx > 0
@@ -644,7 +683,15 @@ function drawPlayers(players, map) {
       c.globalCompositeOperation = "source-over";
 
       if (player.rader) r = Math.atan2(p.y - player.y, p.x - player.x);
-
+      if (setting.setting["show_damage"] && ePlayer.lastHp - ePlayer.hp > 0) {
+        renderObject.push(
+          new DamageNum(
+            Math.random() * (p.width - 10) + p.x,
+            Math.random() * (p.width - 10) + p.y,
+            ePlayer.lastHp - ePlayer.hp
+          )
+        );
+      }
       ePlayer.lastHp = p.HP;
     }
   });
@@ -740,15 +787,6 @@ function loop() {
   } else if (gameScene === 1) {
     cycle++;
 
-    let i = renderObject.length;
-    while (i--) {
-      renderObject[i].update(cycle);
-      renderObject[i].draw(c);
-      if (renderObject[i].isDead) {
-        renderObject.splice(i, 1);
-      }
-    }
-
     if (cycle >= 100) {
       drawPlayers(globalPlayers, globalMap);
       c.globalCompositeOperation = "source-over";
@@ -821,6 +859,15 @@ function loop() {
 
       receiveFlag = false;
       receiveFlagO = false;
+    }
+
+    let i = renderObject.length;
+    while (i--) {
+      renderObject[i].update(cycle);
+      renderObject[i].draw(c);
+      if (renderObject[i].isDead) {
+        renderObject.splice(i, 1);
+      }
     }
   } else if (gameScene == 2) {
     button.t = "もう一回";

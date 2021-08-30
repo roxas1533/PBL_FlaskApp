@@ -149,7 +149,7 @@ def profile():
 @app.route("/setting", methods=["POST"])
 def setting():
     if "username" not in session:
-        raise ValueError("login_error!")
+        return defaultSetting
 
     conn = connectSQL()
 
