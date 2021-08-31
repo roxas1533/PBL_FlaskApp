@@ -18,7 +18,7 @@ class Setting {
   }
 }
 
-class Object {
+class GaneObject {
   constructor(x, y, w, h) {
     this.x = x;
     this.y = y;
@@ -26,7 +26,7 @@ class Object {
     this.height = h;
   }
 }
-class Button extends Object {
+class Button extends GaneObject {
   constructor(x, y, w, h, s) {
     super(x, y, w, h, s);
     this.t = s;
@@ -66,7 +66,7 @@ class Button extends Object {
     }
   }
 }
-class Player extends Object {
+class Player extends GaneObject {
   constructor(x, y, w, h, id, hp) {
     super(x, y, w, h);
     this.id = id;
@@ -86,6 +86,27 @@ class Player extends Object {
     this.cv = 0;
     this.enemyCv = 0;
     this.Sp = 0;
+    this.viewNum = 0;
+    this.keyPow = {};
+  }
+  updateSetting() {
+    let copySetting = JSON.parse(JSON.stringify(setting.setting));
+    copySetting[
+      Object.keys(copySetting).filter((key) => {
+        return copySetting[key] === "SPACE";
+      })["0"]
+    ] = " ";
+
+    this.viewNum = (copySetting["view_num"] / 100) * 720;
+    this.keyPow[copySetting["leftkey"]] = Math.pow(2, 0);
+    this.keyPow[copySetting["upkey"]] = Math.pow(2, 1);
+    this.keyPow[copySetting["rightkey"]] = Math.pow(2, 2);
+    this.keyPow[copySetting["downkey"]] = Math.pow(2, 3);
+    this.keyPow[copySetting["firekey"]] = Math.pow(2, 4);
+    this.keyPow[copySetting["useitemkey"]] = Math.pow(2, 7);
+    this.keyPow[copySetting["leftarmrkey"]] = Math.pow(2, 5);
+    this.keyPow[copySetting["rightarmrkey"]] = Math.pow(2, 6);
+    console.log(this.keyPow);
   }
   draw(c) {
     c.fillStyle = "yellow";
@@ -103,7 +124,7 @@ class Player extends Object {
   }
 }
 
-class RenderObject extends Object {
+class RenderObject extends GaneObject {
   constructor(x, y, h, w) {
     c = canvas.getContext("2d");
     super(x, y, h, w);

@@ -1,4 +1,5 @@
 <div class=profileClass onclick="this.remove();" id=Profile>
+
     <div class="overray">
         <div class="profileWrapper" onclick="event.cancelBubble=true">
             <div id="close">
@@ -12,8 +13,14 @@
                 オプション/<div id="settingname"></div>
             </div>
             <div id=settinglist>
-                <div class=setting id=0 onclick="changesetting(this)">ゲーム設定</div>
-                <div class=setting id=1 onclick="changesetting(this)">キー設定</div>
+                <div class=setting id=0 onclick="changesetting(this)">
+                    <i class="fas fa-cog"></i>
+                    ゲーム設定
+                </div>
+                <div class=setting id=1 onclick="changesetting(this)">
+                    <i class="fas fa-keyboard"></i>
+                    キー設定
+                </div>
             </div>
             <div id=settingcontent class=settingcontent>
             </div>

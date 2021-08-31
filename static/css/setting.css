@@ -1,0 +1,384 @@
+#Profile {
+  position: absolute;
+  width: 100vw;
+  height: 100%;
+}
+.overray {
+  width: 100vw;
+  height: auto;
+  height: 100%;
+  background-color: #000000d7;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.profileWrapper {
+  width: 40%;
+  height: 60%;
+  min-width: 450px;
+  min-height: 550px;
+  background-color: #101010;
+  border: 2px solid #59a6ff;
+  border-radius: 3%;
+  color: #888888;
+  display: flex;
+  flex-direction: column;
+}
+#close {
+  width: 100%;
+  height: 8%;
+  border-bottom: 1px solid #59a6ff;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.fa-times {
+  font-size: 2em;
+}
+.wrapFas2 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  transition: 0.2s;
+  border-radius: 50%;
+}
+.wrapFas2:hover {
+  background-color: #7db9f1a7;
+}
+.wrapFas {
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+#ProfileName {
+  margin-left: 20px;
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  color: #fff;
+}
+#rato {
+  width: 100%;
+  height: 10%;
+}
+
+.waku {
+  border-right: 1px solid #888888;
+  width: 20%;
+  height: 100%;
+}
+.point {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.skinWrap,
+.skins {
+  display: flex;
+  justify-content: center;
+  /* align-items: center; */
+  width: 100%;
+  height: 50%;
+}
+.skins {
+  width: 95%;
+  height: 100%;
+  display: grid;
+  grid-auto-rows: 100px;
+  grid-template-columns: repeat(auto-fill, 100px);
+  grid-gap: 1% 1%;
+}
+.skin {
+  border: 1px solid #888888;
+  margin: 10px;
+  position: relative;
+}
+.skin:hover {
+  outline: 3px solid #6cdfee;
+}
+.nowSkin {
+  outline: 3px solid #46f76c;
+}
+p {
+  color: #fff;
+}
+.example {
+  position: absolute;
+}
+.body {
+  width: 40%;
+  height: 40%;
+  transform: translate(-50%, -50%);
+  top: 60%;
+  left: 50%;
+}
+.firearm {
+  width: 10%;
+  height: 40%;
+  transform: translate(-50%, -50%);
+  top: 40%;
+  left: 50%;
+}
+.settingname {
+  margin-left: 20px;
+  font-size: 1.6em;
+  margin-bottom: 10px;
+  color: #fff;
+}
+#settinglist {
+  display: flex;
+}
+.my-example {
+  color: #fecb81;
+}
+.setting {
+  border: solid 1px #888888;
+  font-size: 1.3em;
+  margin-left: 10px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.setting:hover {
+  background-color: #2c2c2c;
+  transition: 0.2s;
+}
+.settingcontent {
+  display: flex;
+  justify-content: center;
+  /* align-items: center; */
+  width: 100%;
+  height: 63%;
+  overflow-y: auto;
+  border-top: double 2px #ffa500;
+  border-bottom: double 2px #ffa500;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* スクロールの背景の設定 */
+::-webkit-scrollbar-track {
+  border-radius: 5px;
+  box-shadow: 0 0 4px #aaa inset;
+}
+
+/* スクロールのつまみ部分の設定 */
+::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: #1959a8;
+}
+
+#settingWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 10px;
+}
+.detailsetting {
+  color: white;
+  margin-bottom: 10px;
+  align-items: center;
+  width: 100%;
+  background-color: #2c2c2c;
+  display: flex;
+  justify-content: flex-end;
+}
+.settingText {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  font-size: 1.3em;
+  margin-right: auto;
+}
+
+.set {
+  margin-right: 10px;
+}
+.toggle_switch {
+  display: table;
+  font-size: 60px;
+}
+
+.toggle_switch > input {
+  display: none;
+}
+
+.toggle_switch > label {
+  display: block;
+  position: relative;
+  width: 1em;
+  height: 0.53em;
+  /* border-radius: 1em; */
+  background-color: #111113;
+  cursor: pointer;
+}
+.toggle_switch > input:checked + label {
+  background-color: #2dcb45;
+  border: solid 2px rgb(100, 100, 100);
+}
+.toggle_switch > label::before {
+  position: absolute;
+  top: 0.05em;
+  left: 0.05em;
+  width: calc(0.5em - 0.1em);
+  height: calc(0.5em - 0.1em);
+  /* border-radius: calc(1em - 0.1em); */
+  background-color: rgb(136, 136, 136);
+  border: solid 1px white;
+  transition: 0.2s;
+  content: "";
+}
+.toggle_switch > input:checked + label::before {
+  left: calc(100% - 0.5em + 0em);
+}
+.settingfont {
+  font-family: "Dosis", sans-serif;
+  font-size: 1.3em;
+}
+.keysetting {
+  background: none;
+}
+.keysettingtext {
+  background-color: #2c2c2c;
+  width: 47%;
+}
+.key {
+  width: 47%;
+  background-color: #2c2c2c;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  /* padding-left: 5px; */
+  font-size: 1.3em;
+  justify-content: center;
+  font-family: "Sawarabi Mincho", sans-serif;
+  text-shadow: 4px 4px 4px #aaa;
+  display: flex;
+  cursor: pointer;
+}
+.key:hover {
+  outline: 2px solid #aaa;
+}
+@keyframes configure-clockwise {
+  0% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(90deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  75% {
+    transform: rotate(270deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes configure-xclockwise {
+  0% {
+    transform: rotate(45deg);
+  }
+  25% {
+    transform: rotate(-45deg);
+  }
+  50% {
+    transform: rotate(-135deg);
+  }
+  75% {
+    transform: rotate(-225deg);
+  }
+  100% {
+    transform: rotate(-315deg);
+  }
+}
+.configure-border-1 {
+  width: 30px;
+  height: 30px;
+  padding: 3px;
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* background: #fb5b53; */
+  border: 3px solid #aaa;
+  animation: configure-clockwise 2s ease-in-out 0s infinite;
+}
+
+.configure-border-2 {
+  width: 30px;
+  height: 30px;
+  padding: 3px;
+  left: -30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* background: rgb(63, 249, 220); */
+  border: 3px solid #aaa;
+  transform: rotate(45deg);
+  backdrop-filter: blur(6px);
+  animation: configure-xclockwise 2s ease-in-out 0s infinite;
+}
+
+.okcancelarea {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: auto;
+}
+.reset {
+  margin-right: auto;
+  margin-left: 40px;
+}
+.cancel {
+  margin-right: 30px;
+}
+.settingUserButton {
+  font-weight: bold;
+  margin-bottom: 15px;
+  /* border: 1px solid #aaa; */
+  border-bottom: 3px solid rgba(82, 82, 82, 0.486);
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  font-size: 1.2em;
+  background-color: black;
+  position: relative;
+}
+.settingUserButton:hover {
+  background-color: #ffa60021;
+  color: white;
+  transition: 0.2s;
+}
+.ok {
+  margin-right: 20px;
+}
+.underbar,
+.underbar2 {
+  height: 3px;
+  width: 0%;
+  background-color: rgba(243, 120, 48, 0.747);
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transition: 0.2s;
+}
+
+.settingUserButton:hover > .underbar {
+  width: 50%;
+}
+.settingUserButton:hover > .underbar2 {
+  width: 50%;
+  left: 0%;
+}

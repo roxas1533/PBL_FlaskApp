@@ -82,16 +82,7 @@ const ItemDetail = [
   "レーダー",
 ];
 let renderObject = [];
-const keyPow = {
-  ArrowLeft: Math.pow(2, 0),
-  ArrowUp: Math.pow(2, 1),
-  ArrowRight: Math.pow(2, 2),
-  ArrowDown: Math.pow(2, 3),
-  q: Math.pow(2, 5),
-  e: Math.pow(2, 6),
-  z: Math.pow(2, 7),
-  " ": Math.pow(2, 4),
-};
+
 function connectServer() {
   renderObject = [];
 
@@ -108,6 +99,8 @@ function connectServer() {
 
     if (data.id ?? false) {
       player = new Player(0, 0, 0, 0, data.id, data.hp);
+      player.updateSetting();
+
       globalMap = data.map;
       InstanceID = data.Iid;
     } else {
@@ -172,13 +165,15 @@ window.onload = () => {
   c = canvas.getContext("2d");
   document.addEventListener("keydown", (e) => {
     e.preventDefault();
+    const inputKey = e.key.toUpperCase();
     if (gameScene == 1) {
-      if (e.key in keyPow) key |= keyPow[e.key];
+      if (inputKey in player.keyPow) key |= player.keyPow[inputKey];
     }
   });
   document.addEventListener("keyup", (e) => {
     if (gameScene == 1) {
-      if (e.key in keyPow) key &= ~keyPow[e.key];
+      const inputKey = e.key.toUpperCase();
+      if (inputKey in player.keyPow) key &= ~player.keyPow[inputKey];
     }
   });
   canvas.addEventListener(
@@ -241,11 +236,11 @@ function drawLaser(p) {
 }
 function drawView(p) {
   viewList = [];
-  for (i = 0; i < 720; i++) {
+  for (i = 0; i < player.viewNum; i++) {
     // c.beginPath();
     tX = p.x + p.width / 2;
     tY = p.y + p.height / 2;
-    const dig = 0.5;
+    const dig = 360 / player.viewNum;
     // c.moveTo(
     //   tX + 30 * Math.cos(((i * dig) / 180) * Math.PI) + offsetX,
     //   tY + 30 * Math.sin(((i * dig) / 180) * Math.PI) + offsetY
