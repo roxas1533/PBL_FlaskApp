@@ -413,7 +413,7 @@ func makeItem(rMO *returnMessageOther, MapID int) {
 		}
 	}
 	// rM.Item = append(rM.Item, Item{x, y, 20, 20, 18})
-	rMO.Item = append(rMO.Item, Item{x, y, 20, 20, rand.Intn(MaxItemID + 1)})
+	rMO.Item = append(rMO.Item, Item{x, y, 25, 25, rand.Intn(MaxItemID + 1)})
 }
 
 //--------------------------------------------↑アイテム関連ここまで↑------------------------------------------------------

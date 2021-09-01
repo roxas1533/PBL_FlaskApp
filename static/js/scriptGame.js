@@ -38,28 +38,34 @@ let receiveFlagO;
 let InstanceID;
 let viewList = [];
 let isLast = false;
+let itemImage = new Image();
+
 const BT = [1, 3, 3, 10, 10, 5, 1, 10];
-const ItemColor = [
-  "#ff1493",
-  "black",
-  "green",
-  "yellow",
-  "red",
-  "white",
-  "#00AEEF",
-  "#7cfc00",
-  "brown",
-  "blue",
-  "#25523f",
-  "#800000",
-  "#90ee90",
-  "#ff8c00",
-  "#ffd700",
-  "#FF00FF",
-  "#808000",
-  "#cd853f",
-  "#32cd32",
-];
+const ItemColor = {
+  1: "black",
+  2: "green",
+  3: "yellow",
+  4: "red",
+  5: "white",
+  6: "#00AEEF",
+  7: "#7cfc00",
+  10: "#25523f",
+};
+
+const ItemImage = {
+  0: { x: 0, y: 0 },
+  8: { x: 4, y: 1 },
+  9: { x: 3, y: 1 },
+  10: { x: 1, y: 1 },
+  12: { x: 0, y: 1 },
+  13: { x: 0, y: 2 },
+  14: { x: 4, y: 0 },
+  15: { x: 3, y: 0 },
+  16: { x: 2, y: 0 },
+  17: { x: 1, y: 0 },
+  18: { x: 2, y: 1 },
+};
+
 const ItemDetail = [
   "HEAL",
   "PUNCHEUR",
@@ -160,6 +166,10 @@ function connectServer() {
 }
 window.onload = () => {
   loadSkinList();
+  itemImage.src = "/static/img/items.png";
+  itemImage.onload = () => {
+    console.log(itemImage);
+  };
 
   canvas = document.getElementById("canvas");
   c = canvas.getContext("2d");
@@ -200,10 +210,24 @@ window.onload = () => {
 function drawItem(item) {
   if (item ?? false) {
     item.forEach((it, ind) => {
-      c.fillStyle = ItemColor[it.ID];
-      c.strokeStyle = "#FFFFFF";
-      c.fillRect(it.x + offsetX, it.y + offsetY, it.width, it.height);
-      c.strokeRect(it.x + offsetX, it.y + offsetY, it.width, it.height);
+      if (it.ID in ItemImage) {
+        c.drawImage(
+          itemImage,
+          ItemImage[it.ID].x * 32,
+          ItemImage[it.ID].y * 32,
+          32,
+          32,
+          it.x + offsetX,
+          it.y + offsetY,
+          it.width,
+          it.height
+        );
+      } else {
+        c.fillStyle = ItemColor[it.ID];
+        c.strokeStyle = "#FFFFFF";
+        c.fillRect(it.x + offsetX, it.y + offsetY, it.width, it.height);
+        c.strokeRect(it.x + offsetX, it.y + offsetY, it.width, it.height);
+      }
     });
   }
 }
@@ -672,8 +696,22 @@ function loop() {
       c.font = "11pt Arial";
       if (player.itemStock != -1) {
         c.fillText(ItemDetail[player.itemStock], 400, 538);
-        c.fillStyle = ItemColor[player.itemStock];
-        c.fillRect(370 + 2.5, 520 + 2.5, 15, 15);
+        if (player.itemStock in ItemImage) {
+          c.drawImage(
+            itemImage,
+            ItemImage[player.itemStock].x * 32,
+            ItemImage[player.itemStock].y * 32,
+            32,
+            32,
+            370 + 2.5,
+            520 + 2.5,
+            15,
+            15
+          );
+        } else {
+          c.fillStyle = ItemColor[player.itemStock];
+          c.fillRect(370 + 2.5, 520 + 2.5, 15, 15);
+        }
       }
       c.strokeRect(370, 520, 20, 20);
       if (chageHp != 0) {
