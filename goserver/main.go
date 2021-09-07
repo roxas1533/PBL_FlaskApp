@@ -157,32 +157,24 @@ type Item struct {
 
 type returnMessagePlayer struct {
 	Player []player `json:"player"`
-}
-type returnMessageOther struct {
-	Bullets        []Bullet `json:"bullets"`
-	Item           []Item   `json:"item"`
-	wrapperBullets []BulletClass
+	Item   []Item
+	Bullet []Bullet
 }
 
-func (me *returnMessageOther) updateBulletList() {
-	me.Bullets = []Bullet{}
-	for _, b := range me.wrapperBullets {
-		me.Bullets = append(me.Bullets, b.GetMe())
-	}
-}
-func (me *returnMessageOther) Append(b BulletClass) {
+func (me *instance) Append(b BulletClass) {
 	me.wrapperBullets = append(me.wrapperBullets, b)
 }
 
 type instance struct {
-	id     int
-	isLock bool
-	rMP    *returnMessagePlayer
-	rMO    *returnMessageOther
-	time   int
-	cl     []*websocket.Conn
-	MapID  int
-	R      bool
+	id             int
+	isLock         bool
+	rMP            *returnMessagePlayer
+	time           int
+	cl             []*websocket.Conn
+	MapID          int
+	R              bool
+	item           []Item
+	wrapperBullets []BulletClass
 }
 type firstReturn struct {
 	ID         int     `json:"id"`
@@ -366,14 +358,13 @@ func useItem(itemID int, player *player) {
 	}
 }
 func itemCollision(ins *instance) {
-	ins.time++
-	if len(ins.rMO.Item) < 5 {
+	if len(ins.item) < 5 {
 		if ins.time%300 == 0 {
-			makeItem(ins.rMO, ins.MapID)
+			makeItem(ins, ins.MapID)
 		}
 	}
 	var ti []Item
-	for _, v := range ins.rMO.Item {
+	for _, v := range ins.item {
 		flag := false
 		for i := 0; i < len(ins.rMP.Player); i++ {
 			p := &ins.rMP.Player[i]
@@ -391,9 +382,9 @@ func itemCollision(ins *instance) {
 			ti = append(ti, v)
 		}
 	}
-	ins.rMO.Item = ti
+	ins.item = ti
 }
-func makeItem(rMO *returnMessageOther, MapID int) {
+func makeItem(ins *instance, MapID int) {
 	var x float64
 	var y float64
 	isBuild := false
@@ -404,31 +395,41 @@ func makeItem(rMO *returnMessageOther, MapID int) {
 		x = float64(rand.Intn(len(Map[MapID][0])*28-30) + 30)
 		y = float64(rand.Intn(len(Map[MapID])*28-30) + 30)
 		isBuild = true
-		for j := int(math.Floor(y / 30)); j <= int(math.Floor((y+20)/30)); j++ {
-			for k := int(math.Floor(x / 30)); k <= int(math.Floor((x+20)/30)); k++ {
+		for j := int(math.Floor(y / 30)); j <= int(math.Floor((y+25)/30)); j++ {
+			for k := int(math.Floor(x / 30)); k <= int(math.Floor((x+25)/30)); k++ {
 				if Map[MapID][j][k] > 0 {
 					isBuild = false
+					break
 				}
+			}
+			if !isBuild {
+				break
 			}
 		}
 	}
-	// rM.Item = append(rM.Item, Item{x, y, 20, 20, 18})
-	rMO.Item = append(rMO.Item, Item{x, y, 25, 25, rand.Intn(MaxItemID + 1)})
+	item := Item{x, y, 25, 25, rand.Intn(MaxItemID + 1)}
+	ins.item = append(ins.item, item)
+	ins.rMP.Item = append(ins.rMP.Item, item)
 }
 
 //--------------------------------------------↑アイテム関連ここまで↑------------------------------------------------------
+var tmep int
+
 func loopInstance() {
 	for {
+		tmep++
 		for v := range instances {
+
 			if !v.R {
+				v.time++
+
 				var tempB []BulletClass
-				for _, b := range v.rMO.wrapperBullets {
-					updatedB := b.Update(v)
-					if updatedB != nil {
+				for _, b := range v.wrapperBullets {
+					if updatedB := b.Update(v); updatedB != nil {
 						tempB = append(tempB, updatedB)
 					}
 				}
-				v.rMO.wrapperBullets = tempB
+				v.wrapperBullets = tempB
 				itemCollision(v)
 				for i := 0; i < len(v.rMP.Player); i++ {
 					p := &v.rMP.Player[i]
@@ -464,7 +465,7 @@ func loopInstance() {
 						} else {
 							for i := 0; i < len(v.rMP.Player); i++ {
 								if v.rMP.Player[i].ID != p.ID {
-									p.R = float32(math.Atan2(v.rMP.Player[i].Y-p.Y, v.rMP.Player[i].X-p.X) - math.Pi/2)
+									p.R = float32(math.Atan2(v.rMP.Player[i].Y-p.Y, v.rMP.Player[i].X-p.X) + math.Pi/2)
 								}
 							}
 						}
@@ -533,18 +534,11 @@ func loopInstance() {
 							c.Close()
 						}
 					}
-				}
-				// if v.time%10 == 0 {
-				v.rMO.updateBulletList()
-				for _, c := range v.cl {
-					err := c.WriteJSON(v.rMO)
-					if err != nil {
-						c.Close()
+					if len(v.cl) == 2 {
+						v.rMP.Item = []Item{}
+						v.rMP.Bullet = []Bullet{}
 					}
 				}
-
-				// }
-
 			}
 
 		}
@@ -591,11 +585,10 @@ func WebsocketGlobalServer(c echo.Context) error {
 	}
 	if !in {
 		var rMP returnMessagePlayer
-		var rMO returnMessageOther
-		// rM.Map = Map
-		Cinstance = &instance{rand.Intn(10000000), false, &rMP, &rMO, 0, make([]*websocket.Conn, 0), rand.Intn(len(Map)), false}
+		rMP.Bullet = []Bullet{}
+		Cinstance = &instance{id: rand.Intn(10000000), rMP: &rMP, cl: make([]*websocket.Conn, 0), MapID: rand.Intn(len(Map))}
 		for i := 0; i < 5; i++ {
-			makeItem(&rMO, Cinstance.MapID)
+			makeItem(Cinstance, Cinstance.MapID)
 		}
 		Cinstance.cl = append(Cinstance.cl, ws)
 		instances[Cinstance] = true

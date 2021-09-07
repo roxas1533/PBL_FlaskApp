@@ -65,6 +65,7 @@ func (me *Bullet) GetMe() Bullet {
 func (me *Bullet) Update(ins *instance) BulletClass {
 
 	me.Life--
+	// log.Println(me.Life)
 	me.X += float64(me.Vx)
 	me.Y += float64(me.Vy)
 	flag := false
@@ -233,19 +234,20 @@ func newMusingun() *Musingun {
 func _shot(player *player, ins *instance, me *Bullet) Bullet {
 	temp := *me
 	temp.ID = player.ID
-	temp.X = player.X + float64(player.W/2-me.W/2) + 30*math.Cos(float64(player.R)+math.Pi/2)
-	temp.Y = player.Y + float64(player.H/2-me.H/2) + 30*math.Sin(float64(player.R)+math.Pi/2)
-	temp.Vx = me.baseSpeed * math.Cos(float64(player.R)+math.Pi/2+deg2rad(0))
-	temp.Vy = me.baseSpeed * math.Sin(float64(player.R)+math.Pi/2+deg2rad(0))
+	temp.X = player.X + float64(player.W/2-me.W/2) + 30*math.Cos(float64(player.R)-math.Pi/2)
+	temp.Y = player.Y + float64(player.H/2-me.H/2) + 30*math.Sin(float64(player.R)-math.Pi/2)
+	temp.Vx = me.baseSpeed * math.Cos(float64(player.R)-math.Pi/2+deg2rad(0))
+	temp.Vy = me.baseSpeed * math.Sin(float64(player.R)-math.Pi/2+deg2rad(0))
 	temp.IsPoisonA = player.AddPoison
 	temp.IsSpireA = player.isSpire
 	temp.IsStunA = player.AddStun
+	temp.Life += player.BaseBulletLife
 	return temp
 }
 func (me *Bullet) Shot(player *player, ins *instance) {
 	temp := _shot(player, ins, me)
-	ins.rMO.Append(&temp)
-	ins.rMO.Bullets = append(ins.rMO.Bullets, temp)
+	ins.Append(&temp)
+	ins.rMP.Bullet = append(ins.rMP.Bullet, temp)
 
 }
 
@@ -253,10 +255,10 @@ func (me *Around) Shot(player *player, ins *instance) {
 	for i := 0; i < 10; i++ {
 		temp := *me
 		temp.Bullet = _shot(player, ins, &me.Bullet)
-		temp.Vx = temp.baseSpeed * math.Cos(float64(player.R)+math.Pi/2+deg2rad(float64(36*i)))
-		temp.Vy = temp.baseSpeed * math.Sin(float64(player.R)+math.Pi/2+deg2rad(float64(36*i)))
-		ins.rMO.Append(&temp)
-		ins.rMO.Bullets = append(ins.rMO.Bullets, temp.Bullet)
+		temp.Vx = temp.baseSpeed * math.Cos(float64(player.R)-math.Pi/2+deg2rad(float64(36*i)))
+		temp.Vy = temp.baseSpeed * math.Sin(float64(player.R)-math.Pi/2+deg2rad(float64(36*i)))
+		ins.Append(&temp)
+		ins.rMP.Bullet = append(ins.rMP.Bullet, temp.Bullet)
 	}
 }
 
@@ -264,24 +266,24 @@ func (me *Triple) Shot(player *player, ins *instance) {
 	for i := -1; i < 2; i++ {
 		temp := *me
 		temp.Bullet = _shot(player, ins, &me.Bullet)
-		temp.Vx = temp.baseSpeed * math.Cos(float64(player.R)+math.Pi/2+deg2rad(float64(i*15)))
-		temp.Vy = temp.baseSpeed * math.Sin(float64(player.R)+math.Pi/2+deg2rad(float64(i*15)))
-		ins.rMO.Append(&temp)
-		ins.rMO.Bullets = append(ins.rMO.Bullets, temp.Bullet)
+		temp.Vx = temp.baseSpeed * math.Cos(float64(player.R)-math.Pi/2+deg2rad(float64(i*15)))
+		temp.Vy = temp.baseSpeed * math.Sin(float64(player.R)-math.Pi/2+deg2rad(float64(i*15)))
+		ins.Append(&temp)
+		ins.rMP.Bullet = append(ins.rMP.Bullet, temp.Bullet)
 	}
 }
 
 func (me *ChargShot) Shot(player *player, ins *instance) {
 	temp := *me
 	temp.Bullet = _shot(player, ins, &me.Bullet)
-	ins.rMO.Append(&temp)
-	ins.rMO.Bullets = append(ins.rMO.Bullets, temp.Bullet)
+	ins.Append(&temp)
+	ins.rMP.Bullet = append(ins.rMP.Bullet, temp.Bullet)
 }
 func (me *Reflect) Shot(player *player, ins *instance) {
 	temp := *me
 	temp.Bullet = _shot(player, ins, &me.Bullet)
-	ins.rMO.Append(&temp)
-	ins.rMO.Bullets = append(ins.rMO.Bullets, temp.Bullet)
+	ins.Append(&temp)
+	ins.rMP.Bullet = append(ins.rMP.Bullet, temp.Bullet)
 }
 
 func (me *Shotgun) Shot(player *player, ins *instance) {
@@ -289,10 +291,10 @@ func (me *Shotgun) Shot(player *player, ins *instance) {
 		s := float64(rand.Intn(7) + 2)
 		temp := *me
 		temp.Bullet = _shot(player, ins, &me.Bullet)
-		temp.Vx = s * math.Cos(float64(player.R)+math.Pi/2+deg2rad(float64(rand.NormFloat64()*15)))
-		temp.Vy = s * math.Sin(float64(player.R)+math.Pi/2+deg2rad(float64(rand.NormFloat64()*15)))
-		ins.rMO.Append(&temp)
-		ins.rMO.Bullets = append(ins.rMO.Bullets, temp.Bullet)
+		temp.Vx = s * math.Cos(float64(player.R)-math.Pi/2+deg2rad(float64(rand.NormFloat64()*20)))
+		temp.Vy = s * math.Sin(float64(player.R)-math.Pi/2+deg2rad(float64(rand.NormFloat64()*20)))
+		ins.Append(&temp)
+		ins.rMP.Bullet = append(ins.rMP.Bullet, temp.Bullet)
 	}
 
 }
@@ -324,16 +326,16 @@ func newTriple() *Triple {
 	me.Spread = 3
 	me.Type = 2
 	me.Life = 100
-	me.baseSpeed = 3
+	me.baseSpeed = 4
 	return &me
 }
 
 func newAround() *Around {
 	me := Around{Bullet: *newBullet().(*Bullet)}
-	me.Spread = 3
+	me.Spread = 10
 	me.Type = 3
 	me.Life = 100
-	me.baseSpeed = 3
+	me.baseSpeed = 4
 	return &me
 }
 func newSniper() *Sniper {
