@@ -41,16 +41,12 @@ class Player extends GameObject {
     this.itemStock = -1;
     this.item;
     this.effect = 0;
-    this.El = false;
     this.isV = false;
     this.rader = false;
     this.show = false;
     this.name = "";
-    this.enemyName = "";
     this.cv = 0;
-    this.enemyCv = 0;
     this.Sp = 0;
-    this.viewNum = 0;
     this.keyPow = {};
     this.chageHp = 0;
     this.lastSpace = 0;
@@ -77,7 +73,6 @@ class Player extends GameObject {
       })["0"]
     ] = " ";
 
-    this.viewNum = (copySetting["view_num"] / 100) * 720;
     this.keyPow[copySetting["leftkey"]] = Math.pow(2, 0);
     this.keyPow[copySetting["upkey"]] = Math.pow(2, 1);
     this.keyPow[copySetting["rightkey"]] = Math.pow(2, 2);
@@ -318,13 +313,12 @@ window.addEventListener("DOMContentLoaded", () => {
     loadingDOM.remove();
   }, 300);
 });
-
+let loader;
 window.addEventListener("load", () => {
   loader = PIXI.Loader.shared;
   loader.add("/static/img/items.png");
   loader.load();
 });
-let loader;
 
 class Item extends GameObject {
   static ItemImage = {

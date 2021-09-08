@@ -12,6 +12,8 @@ function loadSkinList() {
     .then((res) => {
       res = JSON.parse(res);
       skinlist = res["list"];
+      console.log(skinlist);
+      console.log(skinlist);
       nowSkin = res["skin"];
       changeSkin = nowSkin;
     });
@@ -388,7 +390,6 @@ function setGameScene(map) {
           player.item.isDead = true;
 
         if (player.chageHp != 0) {
-          console.log("aaa");
           // if (player.chageHp == 1)
           //   c.fillStyle = `rgba(255,0,0,${(50 - player.effectTimer) / 90})`;
           // if (player.chageHp == 2)
@@ -708,7 +709,6 @@ function drawPlayers(players, map, delta) {
     op.BT = p.BT;
     op.itemStock = p.ItemStock;
     op.effect = p.Effect;
-    op.El = p.EnemyLaser;
     op.isV = p.IsInvisible;
     op.rader = p.Rader;
     op.show = p.Show;
