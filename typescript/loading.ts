@@ -266,6 +266,7 @@ export class Player extends GameObject {
   public raderArrow: PIXI.Graphics;
   public HPbar: PIXI.Graphics;
   public item: Item;
+  disPlayeffect: any;
 
   constructor(
     public x: number,
@@ -308,6 +309,7 @@ export class Player extends GameObject {
     this.HPbar.drawRect(0, 0, this.hp, 20);
     this.HPbar.endFill();
     this.HPbar.position.set(50, 520);
+    if (id) this.disPlayeffect = this.makeDisPlayeffect();
   }
   updateSetting() {
     let copySetting = JSON.parse(JSON.stringify(setting.setting));
@@ -352,16 +354,17 @@ export class Player extends GameObject {
     if (this.id ?? false) this.setArrow();
     this.cont.position.set(this.x, this.y);
     app.addChild(this.cont);
+    if (this.id) app.addChild(this.disPlayeffect);
   }
   enalbeInvisible() {
     this.renderBody.clear();
     this.renderBody.beginFill(0x0);
-    this.renderBody.lineStyle(2, 0x0000ff);
+    this.renderBody.lineStyle(2, this.bodyColor);
     this.renderBody.drawRect(0, 0, this.width, this.height);
     this.renderBody.endFill();
 
     this.renderArm.clear();
-    this.renderArm.lineStyle(2, 0x0000ff);
+    this.renderArm.lineStyle(2, this.firearmColor);
     this.renderArm.beginFill(0x0);
     this.renderArm.drawRect(0, 0, 10, 30);
     this.renderArm.endFill();
@@ -369,11 +372,11 @@ export class Player extends GameObject {
   }
   disableInvisible() {
     this.renderBody.clear();
-    this.renderBody.beginFill(0x0000ff);
+    this.renderBody.beginFill(this.bodyColor);
     this.renderBody.drawRect(0, 0, this.width, this.height);
     this.renderBody.endFill();
     this.renderArm.clear();
-    this.renderArm.beginFill(0x0000ff);
+    this.renderArm.beginFill(this.firearmColor);
     this.renderArm.drawRect(0, 0, 10, 30);
     this.renderArm.endFill();
     this.cont.filters = null;
@@ -410,6 +413,30 @@ export class Player extends GameObject {
     this.raderArrow.endFill();
     this.raderArrow.visible = false;
     this.cont.addChild(this.raderArrow);
+  }
+
+  makeDisPlayeffect(): PIXI.Sprite {
+    let cont = new PIXI.Container();
+    let temp = new PIXI.Graphics();
+    temp.beginFill(0xffffff);
+    temp.drawRect(0, 0, 500, 500);
+    temp.endFill();
+    cont.addChild(temp);
+    let temp2 = new PIXI.Graphics();
+    temp2.beginFill(0);
+    temp2.drawRect(0, 0, 400, 400);
+    temp2.endFill();
+    temp2.position.set(50, 50);
+    cont.addChild(temp2);
+    cont.filters = [
+      new PIXI.filters.BlurFilter(20, 10, PIXI.settings.FILTER_RESOLUTION, 15),
+    ];
+    const damageEffect = new PIXI.Sprite(
+      game.app.renderer.generateTexture(cont)
+    );
+    damageEffect.tint = 0xff0000;
+    damageEffect.visible = false;
+    return damageEffect;
   }
 }
 
@@ -521,6 +548,41 @@ export class Item extends RenderObject {
   }
   outStage() {
     this.wrapper.parent.removeChild(this.wrapper);
+  }
+}
+
+export class DamageNum extends RenderObject {
+  text: PIXI.Text;
+  private g: number;
+  constructor(x: number, y: number, num: number) {
+    super(x, y, 0, 0);
+    this.vx = Math.random() * 7 - 3.5;
+    this.vy = -(Math.random() * 5 + 2);
+    this.text = new PIXI.Text(num + "", {
+      fontFamily: "Arial",
+      fontSize: 11,
+      fill: 0xffffff,
+    });
+    this.text.position.set(x + game.offsetX, y + game.offsetX);
+    this.g = 0.6;
+  }
+
+  update(delta: number, offsetX: number, offsetY: number) {
+    super.update(delta, offsetX, offsetY);
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += this.g;
+    this.vy = Math.min(this.vy, 6);
+    this.text.position.set(this.x + offsetX, this.y + offsetX);
+    if (this.time > 17) this.text.alpha -= 0.2;
+    if (this.time > 22) this.isDead = true;
+  }
+  onStage(app: PIXI.Container): RenderObject {
+    app.addChild(this.text);
+    return this;
+  }
+  outStage() {
+    this.text.parent.removeChild(this.text);
   }
 }
 

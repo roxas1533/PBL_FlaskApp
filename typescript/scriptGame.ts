@@ -1,4 +1,13 @@
-import { Skin, Game, Bullet, Item, Player, collisionObject } from "./loading";
+import {
+  Skin,
+  Game,
+  Bullet,
+  Item,
+  Player,
+  collisionObject,
+  setting,
+  DamageNum,
+} from "./loading";
 import * as PIXI from "pixi.js";
 import { VisibilityPolygon } from "./VisibilityPolygon";
 import { loadProfile } from "./profile";
@@ -123,7 +132,6 @@ export function setGameScene(map: number[][]) {
   game.gameScenes["gameScene"].addChild(gameCanvas);
   const lightCanvas = new PIXI.Graphics();
   const UICanvas = new PIXI.Graphics();
-  // lightCanvas.mask = ePlayer.cont;
   game.ePlayer.cont.mask = game.player.maskCanvas;
   lightCanvas.filters = [new PIXI.filters.BlurFilter()];
   gameCanvas.addChild(lightCanvas);
@@ -149,6 +157,7 @@ export function setGameScene(map: number[][]) {
   });
 
   gameCanvas.addChild(mapContainer);
+
   gameCanvas.addChild(Item.ItemContainer);
   gameCanvas.addChild(Bullet.BulletContainer);
 
@@ -254,7 +263,7 @@ export function setGameScene(map: number[][]) {
       }
       if (game.cycle >= 100 * delta) {
         gameCanvas.visible = true;
-        drawPlayers(game.globalPlayers, game.globalMap, delta);
+        drawPlayers(game.globalPlayers, game.globalMap, delta, gameCanvas);
 
         drawView(game.player.maskCanvas, lightCanvas, segments);
         mapContainer.position.set(game.offsetX, game.offsetY);
@@ -300,14 +309,12 @@ export function setGameScene(map: number[][]) {
           game.player.item.isDead = true;
 
         if (game.player.chageHp != 0) {
-          // if (player.chageHp == 1)
-          //   c.fillStyle = `rgba(255,0,0,${(50 - player.effectTimer) / 90})`;
-          // if (player.chageHp == 2)
-          //   c.fillStyle = `rgba(0,255,0,${(50 - player.effectTimer) / 90})`;
+          game.player.disPlayeffect.alpha = (50 - game.player.effectTimer) / 90;
           game.player.effectTimer++;
           if (game.player.effectTimer > 50) {
             game.player.chageHp = 0;
             game.player.effectTimer = 0;
+            game.player.disPlayeffect.visible = false;
           }
         }
         bulletMaxText.text =
@@ -378,9 +385,12 @@ function collisionMap(x: number, y: number, map: number[][]) {
   return null;
 }
 
-function drawPlayers(players: any, map: number[][], delta: number) {
-  let r = 0;
-
+function drawPlayers(
+  players: any,
+  map: number[][],
+  delta: number,
+  gameCanvas: PIXI.Container
+) {
   players.forEach((p: any, i: number) => {
     if (!game.receiveFlag) {
       let point = collisionMap(p.x + p.vx, p.y, map);
@@ -443,11 +453,27 @@ function drawPlayers(players: any, map: number[][], delta: number) {
     op.show = p.Show;
     op.Sp = p.SpaceCount;
     op.R = p.rotate;
-    if (op.hp != op.lastHp) op.HPbar.width = op.hp;
-    if (op.hp < op.lastHp) {
-      op.chageHp = 1;
-      op.effectTimer = 0;
-    } else if (op.hp > op.lastHp) op.chageHp = 2;
+    if (op.hp != op.lastHp)
+      if (p.ID === op.id) {
+        op.HPbar.width = op.hp;
+        op.disPlayeffect.visible = true;
+        op.effectTimer = 0;
+        if (op.hp < op.lastHp) {
+          op.disPlayeffect.tint = 0xff0000;
+          op.chageHp = 1;
+        } else if (op.hp > op.lastHp) {
+          op.chageHp = 2;
+          op.disPlayeffect.tint = 0x00ff00;
+        }
+      } else if (setting.setting["show_damage"] && op.lastHp - op.hp > 0) {
+        game.renderObject.push(
+          new DamageNum(
+            Math.random() * (p.width - 10) + p.x,
+            Math.random() * (p.width - 10) + p.y,
+            op.lastHp - op.hp
+          ).onStage(gameCanvas)
+        );
+      }
     op.lastHp = p.HP;
     if (op.hp <= 0) {
       setEndScene(op == game.player ? 1 : 0);
@@ -460,16 +486,6 @@ function drawPlayers(players: any, map: number[][], delta: number) {
     op.width = p.width;
     op.height = p.height;
     op.update();
-    // if (setting.setting["show_damage"] && ePlayer.lastHp - ePlayer.hp > 0) {
-    //   renderObject.push(
-    //     new DamageNum(
-    //       Math.random() * (p.width - 10) + p.x,
-    //       Math.random() * (p.width - 10) + p.y,
-    //       ePlayer.lastHp - ePlayer.hp
-    //     )
-    //   );
-    // }
-    game.ePlayer.lastHp = p.HP;
   });
 }
 
