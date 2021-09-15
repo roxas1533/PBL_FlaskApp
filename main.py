@@ -147,6 +147,8 @@ def loginHtml():
 
 @app.route("/profile", methods=["GET"])
 def profile():
+    if "username" not in session:
+        return "", 401
     conn = connectSQL()
     p = getProfile(conn, session)
     return render_template(

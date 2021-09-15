@@ -30,6 +30,9 @@ export class Game {
   public globalPlayers: Player[];
   public offsetX: number;
   public offsetY: number;
+  public lastTime: number;
+  public bettweenNowLastTime: number;
+  public timeSinceSync: number;
   receiveFlag: boolean;
   InstanceID: any;
   constructor() {
@@ -51,6 +54,9 @@ export class Game {
     this.offsetX = 0;
     this.offsetY = 0;
     this.receiveFlag = false;
+    this.lastTime = Date.now();
+    this.bettweenNowLastTime = 0;
+    this.timeSinceSync = 0;
   }
 
   connectServer() {
@@ -66,7 +72,9 @@ export class Game {
 
     this.server.onmessage = async (e) => {
       const data = JSON.parse(e.data);
-
+      this.bettweenNowLastTime = Date.now() - this.lastTime;
+      this.lastTime = Date.now();
+      this.timeSinceSync = 0;
       if ((data.player ?? false) && data.player.length === 2) {
         data.Item.forEach((item: any) => {
           this.globalItems.push(
@@ -74,8 +82,24 @@ export class Game {
           );
         });
         data.Bullet.forEach((bullet: any) => {
-          this.renderObject.push(Object.assign(new Bullet(), bullet).onStage());
+          for (let e of this.renderObject) {
+            if (bullet.InnerId == e.getID()) {
+              Object.assign(e, bullet);
+              return;
+            }
+          }
+
+          if (!(bullet.InnerId in Bullet.pushedBulletID)) {
+            this.renderObject.push(
+              Object.assign(new Bullet(bullet.InnerId), bullet).onStage()
+            );
+            Bullet.pushedBulletID.push(bullet.InnerId);
+          }
         });
+        this.player.lastX = this.player.x;
+        this.player.lastY = this.player.y;
+        this.ePlayer.lastY = this.ePlayer.y;
+        this.ePlayer.lastY = this.ePlayer.y;
         this.globalPlayers = data.player;
         this.receiveFlag = true;
       }
@@ -122,7 +146,7 @@ export class Game {
                         p.y,
                         p.width,
                         p.height,
-                        0,
+                        p.ID,
                         p.HP,
                         p.Skin
                       );
@@ -171,6 +195,7 @@ let loader: PIXI.Loader;
 window.addEventListener("load", () => {
   loader = PIXI.Loader.shared;
   loader.add("/static/img/items.png");
+  loader.add("/static/img/bulletItem.png");
   loader.onComplete.add(() => {
     setUp();
     document.addEventListener("keydown", (e) => {
@@ -267,6 +292,8 @@ export class Player extends GameObject {
   public HPbar: PIXI.Graphics;
   public item: Item;
   disPlayeffect: any;
+  public lastX: number;
+  public lastY: number;
 
   constructor(
     public x: number,
@@ -278,14 +305,11 @@ export class Player extends GameObject {
     public skin: number
   ) {
     super(x, y, width, height);
-    this.C = 0;
-    this.MC = 0;
-    this.BT = 0;
-    this.R = 0;
+    this.lastX = this.lastY = 0;
+    this.C = this.MC = this.BT = this.R = this.effect = 0;
     this.lastHp = hp;
     this.itemStock = -1;
     this.item = new Item(0, 0, 0, 0, 0, 0);
-    this.effect = 0;
     this.isV = false;
     this.rader = false;
     this.show = false;
@@ -457,42 +481,51 @@ class RenderObject extends GameObject {
   }
   onStage(app: PIXI.Container) {}
   outStage() {}
+  getID(): number {
+    return 0;
+  }
 }
 
 export class Item extends RenderObject {
-  static ItemImage: { [key: number]: { [key: string]: number } } = {
-    0: { x: 0, y: 0 },
-    8: { x: 4, y: 1 },
-    9: { x: 3, y: 1 },
-    10: { x: 1, y: 1 },
-    12: { x: 0, y: 1 },
-    13: { x: 0, y: 2 },
-    14: { x: 4, y: 0 },
-    15: { x: 3, y: 0 },
-    16: { x: 2, y: 0 },
-    17: { x: 1, y: 0 },
-    18: { x: 2, y: 1 },
-  };
+  static ItemImage: { [key: number]: { [key: string]: number } } = [
+    { x: 0, y: 0 },
+    { x: 4, y: 1 },
+    { x: 3, y: 1 },
+    { x: 1, y: 1 },
+    { x: 1, y: 2 },
+    { x: 0, y: 1 },
+    { x: 0, y: 2 },
+    { x: 4, y: 0 },
+    { x: 3, y: 0 },
+    { x: 2, y: 0 },
+    { x: 1, y: 0 },
+    { x: 2, y: 1 },
+  ];
+  static GunImage: { [key: number]: { [key: string]: number } } = [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+    { x: 2, y: 0 },
+    { x: 3, y: 0 },
+    { x: 4, y: 0 },
+    { x: 0, y: 1 },
+    { x: 1, y: 1 },
+    { x: 2, y: 1 },
+    { x: 3, y: 1 },
+    { x: 4, y: 1 },
+  ];
 
   static ItemDetail = [
     "HEAL",
-    "PUNCHEUR",
-    "TRIPLE",
-    "AROUND",
-    "SNIPER",
-    "MINE",
-    "REFLECT",
-    "SHOTGUN",
     "ADDBULLET",
-    "加速",
+    "移動速度上昇",
     "敵表示",
-    "敵のポインター",
+    "反射付与",
     "透明化",
     "射程増加",
     "スタン付与",
     "毒付与",
     "オートエイム",
-    "貫通弾",
+    "無限貫通付与",
     "レーダー",
   ];
 
@@ -509,18 +542,34 @@ export class Item extends RenderObject {
     public type: number = 0
   ) {
     super(x, y, height, width);
-    if (!(ID in Item.ItemImage)) {
-      ID = 0;
+    // if (!(ID in Item.ItemImage)) {
+    //   ID = 0;
+    // }
+
+    let tex: PIXI.Texture;
+    if (this.ID < 100) {
+      tex = new PIXI.Texture(
+        loader.resources["/static/img/items.png"].texture!.castToBaseTexture(),
+        new PIXI.Rectangle(
+          Item.ItemImage[ID].x * 32,
+          Item.ItemImage[ID].y * 32,
+          32,
+          32
+        )
+      );
+    } else {
+      tex = new PIXI.Texture(
+        loader.resources[
+          "/static/img/bulletItem.png"
+        ].texture!.castToBaseTexture(),
+        new PIXI.Rectangle(
+          Item.GunImage[ID - 100].x * 32,
+          Item.GunImage[ID - 100].y * 32,
+          32,
+          32
+        )
+      );
     }
-    let tex: PIXI.Texture = new PIXI.Texture(
-      loader.resources["/static/img/items.png"].texture!.castToBaseTexture(),
-      new PIXI.Rectangle(
-        Item.ItemImage[ID].x * 32,
-        Item.ItemImage[ID].y * 32,
-        32,
-        32
-      )
-    );
 
     this.sprite = new PIXI.Sprite(tex);
     this.sprite.width = width;
@@ -657,34 +706,68 @@ export function collisionObject(
     }
   });
 }
-
+export function collisionMapBullet(
+  me: GameObject,
+  vx: number,
+  vy: number
+): boolean {
+  var x = Math.ceil(me.x + vx);
+  var y = Math.ceil(me.y + vy);
+  var startX = Math.floor(Math.max(Math.floor(x / 30.0), 0));
+  var startY = Math.floor(Math.max(Math.floor(y / 30.0), 0));
+  var endX = Math.floor(
+    Math.min(Math.floor((x + me.width - 1.0) / 30.0), game.globalMap[0].length)
+  );
+  var endY = Math.floor(
+    Math.min(Math.floor((y + me.height - 1.0) / 30.0), game.globalMap.length)
+  );
+  for (let i = startY; i <= endY; i++) {
+    for (let j = startX; j <= endX; j++) {
+      if (game.globalMap[i][j] > 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 export class Bullet extends GameObject {
+  static pushedBulletID: number[] = [];
   static BulletContainer = new PIXI.Container();
   private time: number;
   public bullet: PIXI.Graphics;
   public IsSpireA: boolean;
+  public IsReflectA: boolean;
   public Life: number;
   ID: number;
-  constructor() {
+  constructor(public innerID: number) {
     super(0, 0, 0, 0);
     this.time = 0;
     this.bullet = new PIXI.Graphics();
     this.IsSpireA = false;
+    this.IsReflectA = false;
     this.Life = 0;
     this.ID = 0;
   }
   update(delta: number) {
     this.time += delta;
+
     this.x += this.vx * delta;
     this.y += this.vy * delta;
     this.bullet.x = this.x + game.offsetX;
     this.bullet.y = this.y + game.offsetY;
     if (this.time >= this.Life) this.isDead = true;
-    if (
-      !this.IsSpireA &&
-      game.globalMap[Math.floor(this.y / 30)][Math.floor(this.x / 30)] > 0
-    )
-      this.isDead = true;
+    if (!this.IsSpireA) {
+      if (collisionMapBullet(this, this.vx, 0)) {
+        if (this.IsReflectA) {
+          this.vx *= -1;
+        } else this.isDead = true;
+      }
+      if (collisionMapBullet(this, 0, this.vy)) {
+        if (this.IsReflectA) {
+          this.vy *= -1;
+        } else this.isDead = true;
+      }
+    }
     collisionObject(this, [game.ePlayer, game.player], (p) => {
       if (p.id != this.ID) this.isDead = true;
     });
@@ -699,5 +782,8 @@ export class Bullet extends GameObject {
   }
   outStage() {
     this.bullet.parent.removeChild(this.bullet);
+  }
+  getID(): number {
+    return this.innerID;
   }
 }

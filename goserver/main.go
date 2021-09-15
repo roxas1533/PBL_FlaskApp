@@ -121,7 +121,7 @@ type player struct {
 	ItemStock      int     `json:"ItemStock"`
 	Effect         float32 `json:"Effect"`
 	Show           bool
-	ELaser         bool     `json:"EnemyLaser"`
+	isReflect      bool
 	IsInvisible    bool     `json:"IsInvisible"`
 	Status         []Status `json:"Status"`
 	Vx             int      `json:"vx"`
@@ -144,7 +144,7 @@ type player struct {
 	sessionId      string
 	Cv             int
 	Skin           int
-	bullet         BulletClass
+	gun            GunClass
 }
 
 type Item struct {
@@ -182,7 +182,9 @@ type firstReturn struct {
 	Map        [][]int `json:"map"`
 }
 
-var bulletType = []BulletClass{newMusingun(), newPunchur(), newTriple(), newAround(), newSniper(), newMine(), newReflect(), newShotgun()}
+var bulletType = []GunClass{Musingun{Gun{Spread: 1}}, Punchur{Gun{Spread: 3}},
+	Triple{Gun{Spread: 3}}, Around{Gun{Spread: 10}}, Sniper{Gun{Spread: 10}},
+	Mine{Gun{Spread: 5}}, Reflect{Gun{Spread: 1}}, Shotgun{Gun{Spread: 10}}}
 
 // Map 全体マップ配列
 var Map [][][]int
@@ -207,12 +209,12 @@ func collisionMap(x float64, y float64, MapID int) (int, int) {
 	return -1, -1
 }
 func shot(player *player, ins *instance, ls int) {
-	spread := player.bullet.GetMe().Spread
+	spread := player.gun.getSpread()
 	if player.C > 0 || ls > 150 {
 		if ls > 150 {
-			newChargeShot().Shot(player, ins)
+			ChargShot{}.Shot(player, ins)
 		} else {
-			player.bullet.Shot(player, ins)
+			player.gun.Shot(player, ins)
 		}
 		player.C -= spread
 		if player.C < 0 {
@@ -253,7 +255,7 @@ func playerUpdate(player *player, ls int, MapID int) {
 		}
 	}
 	if player.Count%50 == 0 && ls == 0 {
-		player.C += player.bullet.GetMe().Spread
+		player.C += player.gun.getSpread()
 		if player.C > player.MC {
 			player.C = player.MC
 		}
@@ -265,7 +267,7 @@ func playerUpdate(player *player, ls int, MapID int) {
 //--------------------------------------------↓アイテム関連↓------------------------------------------------------
 
 //MaxItemID 最大のアイテムID
-const MaxItemID = 18
+const MaxItemID = 11
 
 //EffectUpdate エフェクト効果を更新します。
 func effectUpdate(p *player, id int, lastTime float32) {
@@ -288,25 +290,25 @@ func timer(left int, p *player, do func(*player)) {
 }
 func endEffect(p *player, id int) {
 	switch id {
-	case 9:
+	case 2:
 		p.BaseSpeed -= 3
-	case 10:
+	case 3:
 		p.Show = false
-	case 11:
-		p.ELaser = false
-	case 12:
+	case 4:
+		p.isReflect = false
+	case 5:
 		p.IsInvisible = false
-	case 13:
+	case 6:
 		p.BaseBulletLife = 0
-	case 14:
+	case 7:
 		p.AddStun = false
-	case 15:
+	case 8:
 		p.AddPoison = false
-	case 16:
+	case 9:
 		p.isAuto = false
-	case 17:
+	case 10:
 		p.isSpire = false
-	case 18:
+	case 11:
 		p.Rader = false
 	}
 }
@@ -318,43 +320,43 @@ func useItem(itemID int, player *player) {
 		if player.Hp > 100 {
 			player.Hp = 100
 		}
-	case 8:
+	case 1:
 		player.MC += 5
-	case 9:
+	case 2:
 		player.BaseSpeed += 3
 		go effectUpdate(player, itemID, 10)
-	case 10:
+	case 3:
 		player.Show = true
 		go effectUpdate(player, itemID, 23)
-	case 11:
-		player.ELaser = true
+	case 4:
+		player.isReflect = true
 		go effectUpdate(player, itemID, 30)
-	case 12:
+	case 5:
 		player.IsInvisible = true
 		go effectUpdate(player, itemID, 5)
-	case 13:
+	case 6:
 		player.BaseBulletLife = 100
 		go effectUpdate(player, itemID, 20)
-	case 14:
+	case 7:
 		player.AddStun = true
 		go effectUpdate(player, itemID, 15)
-	case 15:
+	case 8:
 		player.AddPoison = true
 		go effectUpdate(player, itemID, 15)
-	case 16:
+	case 9:
 		player.isAuto = true
 		go effectUpdate(player, itemID, 3)
-	case 17:
+	case 10:
 		player.isSpire = true
 		go effectUpdate(player, itemID, 8)
-	case 18:
+	case 11:
 		player.Rader = true
 		go effectUpdate(player, itemID, 25)
 
 	default:
 		player.MC++
-		player.BT = itemID
-		player.bullet = bulletType[itemID]
+		player.BT = itemID - 100
+		player.gun = bulletType[itemID-100]
 	}
 }
 func itemCollision(ins *instance) {
@@ -370,7 +372,7 @@ func itemCollision(ins *instance) {
 			p := &ins.rMP.Player[i]
 			if int(p.X) < int(v.X)+v.W && int(p.X)+p.W > int(v.X) && int(p.Y) < int(v.Y)+v.H && int(p.Y)+p.H > int(v.Y) {
 				switch {
-				case v.ItemID >= 9 && v.ItemID <= MaxItemID:
+				case v.ItemID >= 2 && v.ItemID <= MaxItemID:
 					p.ItemStock = v.ItemID
 				default:
 					useItem(v.ItemID, p)
@@ -407,7 +409,13 @@ func makeItem(ins *instance, MapID int) {
 			}
 		}
 	}
-	item := Item{x, y, 25, 25, rand.Intn(MaxItemID + 1)}
+	var ItemID int
+	if rand.Float32() <= 0.5 {
+		ItemID = rand.Intn(8) + 100
+	} else {
+		ItemID = rand.Intn(MaxItemID + 1)
+	}
+	item := Item{x, y, 25, 25, ItemID}
 	ins.item = append(ins.item, item)
 	ins.rMP.Item = append(ins.rMP.Item, item)
 }
@@ -527,7 +535,11 @@ func loopInstance() {
 
 					}
 				}
-				if v.time%2 == 0 {
+				if v.time%3 == 0 {
+					v.rMP.Bullet = []Bullet{}
+					for _, b := range v.wrapperBullets {
+						v.rMP.Bullet = append(v.rMP.Bullet, b.GetMe())
+					}
 					for _, c := range v.cl {
 						err := c.WriteJSON(v.rMP)
 						if err != nil {
@@ -536,7 +548,6 @@ func loopInstance() {
 					}
 					if len(v.cl) == 2 {
 						v.rMP.Item = []Item{}
-						v.rMP.Bullet = []Bullet{}
 					}
 				}
 			}
@@ -566,7 +577,7 @@ func WebsocketGlobalServer(c echo.Context) error {
 	p.ID = id
 	p.MaxV = 3
 	p.ItemStock = -1
-	p.bullet = newMusingun()
+	p.gun = bulletType[0]
 	session, err := c.Cookie("session")
 	if err == nil {
 		p.sessionId = session.Value

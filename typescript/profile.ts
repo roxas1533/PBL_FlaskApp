@@ -11,7 +11,7 @@ export async function loadProfile() {
       if (response.ok) {
         return response.text();
       } else {
-        return Promise.reject(new Error("エラーです"));
+        return "";
       }
     })
     .then((res) => {

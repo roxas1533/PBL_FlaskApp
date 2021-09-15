@@ -249,85 +249,82 @@ export function setGameScene(map: number[][]) {
   segments = VisibilityPolygon.breakIntersections(segments);
   game.cycle = 0;
   game.app.ticker.add(gameLoop);
-  function gameLoop() {
+  function gameLoop(t: number) {
     let delta = 60 / game.app.ticker.FPS;
+    game.timeSinceSync += t;
     game.cycle += delta;
     FPS.text = "" + game.app.ticker.FPS;
-    if (game.currentScene == "gameScene") {
-      for (let i = game.renderObject.length - 1; i >= 0; i--) {
-        game.renderObject[i].update(delta, game.offsetX, game.offsetY);
-        if (game.renderObject[i].isDead) {
-          game.renderObject[i].outStage();
-          game.renderObject.splice(i, 1);
-        }
+    for (let i = game.renderObject.length - 1; i >= 0; i--) {
+      game.renderObject[i].update(delta, game.offsetX, game.offsetY);
+      if (game.renderObject[i].isDead) {
+        game.renderObject[i].outStage();
+        game.renderObject.splice(i, 1);
       }
-      if (game.cycle >= 100 * delta) {
-        gameCanvas.visible = true;
-        drawPlayers(game.globalPlayers, game.globalMap, delta, gameCanvas);
+    }
+    if (game.cycle >= 100 * delta) {
+      if (game.cycle % 100) Bullet.pushedBulletID = [];
+      gameCanvas.visible = true;
+      drawPlayers(game.globalPlayers, game.globalMap, delta, gameCanvas);
 
-        drawView(game.player.maskCanvas, lightCanvas, segments);
-        mapContainer.position.set(game.offsetX, game.offsetY);
+      drawView(game.player.maskCanvas, lightCanvas, segments);
+      mapContainer.position.set(game.offsetX, game.offsetY);
 
-        for (let i = game.globalItems.length - 1; i >= 0; i--) {
-          game.globalItems[i].update(game.offsetX, game.offsetY);
-          collisionObject(
-            game.globalItems[i],
-            [game.player, game.ePlayer],
-            (obj: Player) => {
-              if (obj === game.player) {
-                if (
-                  game.globalItems[i].ID >= 9 &&
-                  game.globalItems[i].ID <= 18
-                ) {
-                  if (game.player.item ?? false) game.player.item.isDead = true;
-                  const uiitem = new Item(
-                    370 + 2.5,
-                    520 + 2.5,
-                    15,
-                    15,
-                    game.globalItems[i].ID,
-                    1
-                  );
-                  UICanvas.addChild(uiitem.wrapper);
-                  game.renderObject.push(uiitem);
-                  game.player.item = uiitem;
-                }
+      for (let i = game.globalItems.length - 1; i >= 0; i--) {
+        game.globalItems[i].update(game.offsetX, game.offsetY);
+        collisionObject(
+          game.globalItems[i],
+          [game.player, game.ePlayer],
+          (obj: Player) => {
+            if (obj === game.player) {
+              if (game.globalItems[i].ID >= 1 && game.globalItems[i].ID < 100) {
+                if (game.player.item ?? false) game.player.item.isDead = true;
+                const uiitem = new Item(
+                  370 + 2.5,
+                  520 + 2.5,
+                  15,
+                  15,
+                  game.globalItems[i].ID,
+                  1
+                );
+                UICanvas.addChild(uiitem.wrapper);
+                game.renderObject.push(uiitem);
+                game.player.item = uiitem;
               }
-              game.globalItems[i].isDead = true;
-              Item.ItemContainer.removeChild(game.globalItems[i].wrapper);
-              game.globalItems.splice(i, 1);
             }
-          );
-        }
-        if (game.player.effect > 0) {
-          effectLine.clear();
-          effectLine.lineStyle(2, 0x0000ff);
-          effectLine.moveTo(0, 500);
-          effectLine.lineTo(game.player.effect * 500, 500);
-        }
-        if ((game.player.key & 128) > 0 && (game.player.item ?? false))
-          game.player.item.isDead = true;
-
-        if (game.player.chageHp != 0) {
-          game.player.disPlayeffect.alpha = (50 - game.player.effectTimer) / 90;
-          game.player.effectTimer++;
-          if (game.player.effectTimer > 50) {
-            game.player.chageHp = 0;
-            game.player.effectTimer = 0;
-            game.player.disPlayeffect.visible = false;
+            game.globalItems[i].isDead = true;
+            Item.ItemContainer.removeChild(game.globalItems[i].wrapper);
+            game.globalItems.splice(i, 1);
           }
-        }
-        bulletMaxText.text =
-          Math.floor(game.player.C / BT[game.player.BT]) +
-          "/" +
-          Math.floor(game.player.MC / BT[game.player.BT]);
-        game.server!.send(JSON.stringify({ key: game.player.key }));
+        );
+      }
+      if (game.player.effect > 0) {
+        effectLine.clear();
+        effectLine.lineStyle(2, 0x0000ff);
+        effectLine.moveTo(0, 500);
+        effectLine.lineTo(game.player.effect * 500, 500);
+      }
+      if ((game.player.key & 128) > 0 && (game.player.item ?? false))
+        game.player.item.isDead = true;
 
-        game.receiveFlag = false;
-        if (game.currentScene != "gameScene") {
-          game.app.ticker.remove(gameLoop);
+      if (game.player.chageHp != 0) {
+        game.player.disPlayeffect.alpha = (50 - game.player.effectTimer) / 90;
+        game.player.effectTimer++;
+        if (game.player.effectTimer > 50) {
+          game.player.chageHp = 0;
+          game.player.effectTimer = 0;
+          game.player.disPlayeffect.visible = false;
         }
       }
+      bulletMaxText.text =
+        Math.floor(game.player.C / BT[game.player.BT]) +
+        "/" +
+        Math.floor(game.player.MC / BT[game.player.BT]);
+      game.server!.send(JSON.stringify({ key: game.player.key }));
+
+      if (game.currentScene != "gameScene") {
+        game.app.ticker.remove(gameLoop);
+      }
+      game.receiveFlag = false;
     }
   }
 }
@@ -391,38 +388,12 @@ function drawPlayers(
   delta: number,
   gameCanvas: PIXI.Container
 ) {
+  var lerp = (s: number, e: number, t: number) =>
+    (e - s) * (1 - Math.pow(1 - 0.1, 60 * t)) + s;
   players.forEach((p: any, i: number) => {
-    if (!game.receiveFlag) {
-      let point = collisionMap(p.x + p.vx, p.y, map);
-      if (!point) {
-        p.x += p.vx * delta;
-      } else {
-        if (p.vx < 0) {
-          p.x = (point.x + 1) * 30;
-        } else if (p.vx > 0) {
-          p.x = point.x * 30 - 30;
-        }
-      }
-      point = collisionMap(p.x, p.y + p.vy, map);
-      if (!point) {
-        p.y += p.vy * delta;
-      } else {
-        if (p.vy < 0) {
-          p.y = (point.y + 1) * 30;
-        } else if (p.vy > 0) {
-          p.y = point.y * 30 - 30;
-        }
-      }
-    }
     let op;
     if (p.ID === game.player.id) {
       op = game.player;
-      game.offsetX = 250 - p.x;
-      game.offsetX = Math.min(game.offsetX, 0);
-      game.offsetX = Math.max(game.offsetX, 500 - map[0].length * 30);
-      game.offsetY = 250 - p.y;
-      game.offsetY = Math.min(game.offsetY, 0);
-      game.offsetY = Math.max(game.offsetY, 500 - map.length * 30);
 
       if (op.isV != p.IsInvisible) {
         if (p.IsInvisible) op.enalbeInvisible();
@@ -433,6 +404,18 @@ function drawPlayers(
         else game.ePlayer.cont.mask = game.player.maskCanvas;
       }
       if (op.rader != p.Rader) game.player.raderArrow.visible = p.Rader;
+      if (!game.receiveFlag) {
+        if (op.key & Math.pow(2, 0)) p.vx = -p.mv;
+        if (op.key & Math.pow(2, 1)) p.vy = -p.mv;
+        if (op.key & Math.pow(2, 2)) p.vx = p.mv;
+        if (op.key & Math.pow(2, 3)) p.vy = p.mv;
+        if ((op.key & Math.pow(2, 0)) == 0 && (op.key & Math.pow(2, 2)) == 0) {
+          p.vx = 0;
+        }
+        if ((op.key & Math.pow(2, 1)) == 0 && (op.key & Math.pow(2, 3)) == 0) {
+          p.vy = 0;
+        }
+      }
     } else {
       op = game.ePlayer;
       if (op.isV != p.IsInvisible) {
@@ -440,6 +423,7 @@ function drawPlayers(
         else op.cont.visible = true;
       }
     }
+
     op.lastSpace = p.Key & 16;
 
     op.hp = p.HP;
@@ -453,27 +437,32 @@ function drawPlayers(
     op.show = p.Show;
     op.Sp = p.SpaceCount;
     op.R = p.rotate;
-    if (op.hp != op.lastHp)
-      if (p.ID === op.id) {
-        op.HPbar.width = op.hp;
-        op.disPlayeffect.visible = true;
-        op.effectTimer = 0;
-        if (op.hp < op.lastHp) {
-          op.disPlayeffect.tint = 0xff0000;
-          op.chageHp = 1;
-        } else if (op.hp > op.lastHp) {
-          op.chageHp = 2;
-          op.disPlayeffect.tint = 0x00ff00;
+    if (op.hp != op.lastHp) {
+      if (op.id === game.player.id) {
+        if (p.ID === op.id) {
+          op.HPbar.width = op.hp;
+          op.disPlayeffect.visible = true;
+          op.effectTimer = 0;
+          if (op.hp < op.lastHp) {
+            op.disPlayeffect.tint = 0xff0000;
+            op.chageHp = 1;
+          } else if (op.hp > op.lastHp) {
+            op.chageHp = 2;
+            op.disPlayeffect.tint = 0x00ff00;
+          }
         }
-      } else if (setting.setting["show_damage"] && op.lastHp - op.hp > 0) {
-        game.renderObject.push(
-          new DamageNum(
-            Math.random() * (p.width - 10) + p.x,
-            Math.random() * (p.width - 10) + p.y,
-            op.lastHp - op.hp
-          ).onStage(gameCanvas)
-        );
+      } else {
+        if (setting.setting["show_damage"] && op.lastHp - op.hp > 0) {
+          game.renderObject.push(
+            new DamageNum(
+              Math.random() * (p.width - 10) + p.x,
+              Math.random() * (p.width - 10) + p.y,
+              op.lastHp - op.hp
+            ).onStage(gameCanvas)
+          );
+        }
       }
+    }
     op.lastHp = p.HP;
     if (op.hp <= 0) {
       setEndScene(op == game.player ? 1 : 0);
@@ -481,8 +470,40 @@ function drawPlayers(
       loadProfile();
     }
 
-    op.x = p.x;
-    op.y = p.y;
+    let point = collisionMap(p.x + p.vx, p.y, map);
+    if (!point) {
+      op.x += p.vx * delta;
+    } else {
+      if (p.vx < 0) {
+        op.x = (point.x + 1) * 30;
+      } else if (p.vx > 0) {
+        op.x = point.x * 30 - 30;
+      }
+    }
+    point = collisionMap(p.x, p.y + p.vy, map);
+    if (!point) {
+      op.y += p.vy * delta;
+    } else {
+      if (p.vy < 0) {
+        op.y = (point.y + 1) * 30;
+      } else if (p.vy > 0) {
+        op.y = point.y * 30 - 30;
+      }
+    }
+    if (game.receiveFlag) {
+      if (Math.abs(op.x - p.x) > 10) op.x = p.x;
+      if (Math.abs(op.y - p.y) > 10) op.y = p.y;
+    }
+
+    if (op == game.player) {
+      game.offsetX = 250 - op.x;
+      game.offsetX = Math.min(game.offsetX, 0);
+      game.offsetX = Math.max(game.offsetX, 500 - map[0].length * 30);
+      game.offsetY = 250 - op.y;
+      game.offsetY = Math.min(game.offsetY, 0);
+      game.offsetY = Math.max(game.offsetY, 500 - map.length * 30);
+    }
+
     op.width = p.width;
     op.height = p.height;
     op.update();
