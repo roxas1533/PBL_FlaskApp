@@ -1,11 +1,14 @@
 import * as PIXI from "pixi.js";
+import { VisibilityPolygon } from "./VisibilityPolygon";
 export let setting: Setting;
 import { loadProfile } from "./profile";
 import {
+  BT,
   changeScene,
+  collisionMap,
   game,
   loadSkinList,
-  setGameScene,
+  setEndScene,
   setTitleScene,
   setUp,
 } from "./scriptGame";
@@ -20,6 +23,7 @@ export class Game {
   public cycle: number;
   public app: PIXI.Application;
   public currentScene: string;
+  public chargeGage: PIXI.Graphics;
   public player: Player;
   public ePlayer: Player;
   public gameScenes: { [key: string]: PIXI.Container };
@@ -44,8 +48,8 @@ export class Game {
     });
     this.currentScene = "titleScene";
     this.gameScenes = {};
-    this.player = new Player(0, 0, 0, 0, 0, 0, 0);
-    this.ePlayer = new Player(0, 0, 0, 0, 0, 0, 0);
+    this.player = new Player(0, 0, 0, 0, 0, 0, 0, true);
+    this.ePlayer = new Player(0, 0, 0, 0, 0, 0, 0, false);
     this.server = undefined;
     this.renderObject = [];
     this.globalItems = [];
@@ -57,6 +61,7 @@ export class Game {
     this.lastTime = Date.now();
     this.bettweenNowLastTime = 0;
     this.timeSinceSync = 0;
+    this.chargeGage = new PIXI.Graphics();
   }
 
   connectServer() {
@@ -133,7 +138,8 @@ export class Game {
                         p.height,
                         myid,
                         p.HP,
-                        p.Skin
+                        p.Skin,
+                        true
                       );
                       this.player.updateSetting();
                       this.player.name = p.Name;
@@ -148,7 +154,8 @@ export class Game {
                         p.height,
                         p.ID,
                         p.HP,
-                        p.Skin
+                        p.Skin,
+                        false
                       );
                       this.renderObject.push(
                         new PointObject(500, 100, -20, p.Name, p.Cv)
@@ -156,13 +163,375 @@ export class Game {
                     }
                   });
                 });
-              setGameScene(this.globalMap);
+              this.setGameScene();
               changeScene("gameScene");
             }
           }
         }
       }
     };
+  }
+
+  setGameScene() {
+    this.gameScenes["gameScene"] = new PIXI.Container();
+    const gameCanvas = new PIXI.Container();
+    gameCanvas.visible = false;
+    this.gameScenes["gameScene"].addChild(gameCanvas);
+    const lightCanvas = new PIXI.Graphics();
+    const UICanvas = new PIXI.Graphics();
+    this.ePlayer.cont.mask = this.player.maskCanvas;
+    lightCanvas.filters = [new PIXI.filters.BlurFilter()];
+    gameCanvas.addChild(lightCanvas);
+    const mapContainer = new PIXI.Container();
+    let pol: number[][][] = [];
+
+    this.globalMap.forEach((e, i) => {
+      e.forEach((b, j) => {
+        if (b === 1) {
+          let obj = new PIXI.Graphics();
+          obj.beginFill(0x808080);
+          obj.drawRect(j * 30 + this.offsetX, i * 30 + this.offsetY, 30, 30);
+          obj.endFill();
+          mapContainer.addChild(obj);
+          pol.push([
+            [j * 30, i * 30],
+            [j * 30 + 30, i * 30],
+            [j * 30 + 30, i * 30 + 30],
+            [j * 30, i * 30 + 30],
+          ]);
+        }
+      });
+    });
+
+    gameCanvas.addChild(mapContainer);
+
+    gameCanvas.addChild(Item.ItemContainer);
+    gameCanvas.addChild(Bullet.BulletContainer);
+
+    this.player.onStage(gameCanvas);
+    this.ePlayer.onStage(gameCanvas);
+    this.chargeGage.beginFill(0xffffff);
+    this.chargeGage.drawRect(0, 0, 30, 15);
+    this.chargeGage.endFill();
+    this.chargeGage.width = 0;
+    this.chargeGage.position.set(this.player.x, this.player.y - 20);
+    this.chargeGage.tint = 0xff0000;
+    gameCanvas.addChild(this.chargeGage);
+    const FPS = new PIXI.Text(this.app.ticker.FPS + "", {
+      fontFamily: "Arial",
+      fontSize: 10,
+      fill: 0xffffff,
+    });
+    gameCanvas.addChild(FPS);
+
+    let UIback = new PIXI.Graphics();
+    UIback.beginFill(0);
+    UIback.drawRect(0, 500, 500, 50);
+    UIback.endFill();
+    UICanvas.addChild(UIback);
+
+    let UILine = new PIXI.Graphics();
+    UILine.lineStyle(2, 0xffffff);
+    UILine.moveTo(0, 500);
+    UILine.lineTo(500, 500);
+    UICanvas.addChild(UILine);
+
+    const HPtext = new PIXI.Text("HP", {
+      fontFamily: "Arial",
+      fontSize: 11,
+      fill: 0xffffff,
+    });
+    HPtext.position.set(50, 520 - HPtext.height);
+    UICanvas.addChild(HPtext);
+
+    let HPback = new PIXI.Graphics();
+    HPback.beginFill(0xff0000);
+    HPback.drawRect(50, 520, 100, 20);
+    HPback.endFill();
+    UICanvas.addChild(HPback);
+    UICanvas.addChild(this.player.HPbar);
+
+    const bullettext = new PIXI.Text("Bullet", {
+      fontFamily: "Arial",
+      fontSize: 11,
+      fill: 0xffffff,
+    });
+    bullettext.position.set(200, 525 - bullettext.height);
+    UICanvas.addChild(bullettext);
+
+    const bulletMaxText = new PIXI.Text(
+      Math.floor(this.player.C / BT[this.player.BT]) +
+        "/" +
+        Math.floor(this.player.MC / BT[this.player.BT]),
+      {
+        fontFamily: "Arial",
+        fontSize: 20,
+        fill: 0xffffff,
+      }
+    );
+    bulletMaxText.position.set(210, 525);
+    UICanvas.addChild(bulletMaxText);
+
+    const itemStroke = new PIXI.Graphics();
+    itemStroke.lineStyle(1, 0xffffff);
+    itemStroke.drawRect(370, 520, 20, 20);
+    UICanvas.addChild(itemStroke);
+
+    const itemText = new PIXI.Text("Item", {
+      fontFamily: "Arial",
+      fontSize: 11,
+      fill: 0xffffff,
+    });
+    itemText.position.set(370, 520 - itemText.height);
+    UICanvas.addChild(itemText);
+
+    const effectLine = new PIXI.Graphics();
+    effectLine.lineStyle(2, 0x0000ff);
+    effectLine.moveTo(0, 500);
+    effectLine.lineTo(500, 500);
+    UICanvas.addChild(effectLine);
+    gameCanvas.addChild(UICanvas);
+
+    let i = this.renderObject.length;
+    while (i--) {
+      this.renderObject[i].onStage(this.gameScenes["gameScene"]);
+    }
+    this.app.stage.addChild(this.gameScenes["gameScene"]);
+    var segments = VisibilityPolygon.convertToSegments(pol);
+    segments = VisibilityPolygon.breakIntersections(segments);
+    this.cycle = 0;
+    const gameLoop = (t: number) => {
+      let delta = 60 / this.app.ticker.FPS;
+      this.timeSinceSync += t;
+      this.cycle += delta;
+      FPS.text = "" + this.app.ticker.FPS;
+      for (let i = this.renderObject.length - 1; i >= 0; i--) {
+        this.renderObject[i].update(delta, this.offsetX, this.offsetY);
+        if (this.renderObject[i].isDead) {
+          this.renderObject[i].outStage();
+          this.renderObject.splice(i, 1);
+        }
+      }
+      if (this.cycle >= 100 * delta) {
+        if (this.cycle % 100) Bullet.pushedBulletID = [];
+        gameCanvas.visible = true;
+        this.drawPlayers(delta, gameCanvas);
+
+        this.updateView(lightCanvas, segments);
+        mapContainer.position.set(this.offsetX, this.offsetY);
+
+        for (let i = this.globalItems.length - 1; i >= 0; i--) {
+          this.globalItems[i].update(this.offsetX, this.offsetY);
+          collisionObject(
+            this.globalItems[i],
+            [this.player, this.ePlayer],
+            (obj: Player) => {
+              if (obj === this.player) {
+                if (
+                  this.globalItems[i].ID >= 1 &&
+                  this.globalItems[i].ID < 100
+                ) {
+                  if (this.player.item ?? false) this.player.item.isDead = true;
+                  const uiitem = new Item(
+                    370 + 2.5,
+                    520 + 2.5,
+                    15,
+                    15,
+                    this.globalItems[i].ID,
+                    1
+                  );
+                  UICanvas.addChild(uiitem.wrapper);
+                  this.renderObject.push(uiitem);
+                  this.player.item = uiitem;
+                }
+              }
+              this.globalItems[i].isDead = true;
+              Item.ItemContainer.removeChild(this.globalItems[i].wrapper);
+              this.globalItems.splice(i, 1);
+            }
+          );
+        }
+        if (this.player.effect > 0) {
+          effectLine.clear();
+          effectLine.lineStyle(2, 0x0000ff);
+          effectLine.moveTo(0, 500);
+          effectLine.lineTo(this.player.effect * 500, 500);
+        }
+
+        bulletMaxText.text =
+          Math.floor(this.player.C / BT[this.player.BT]) +
+          "/" +
+          Math.floor(this.player.MC / BT[this.player.BT]);
+        this.server!.send(JSON.stringify({ key: this.player.key }));
+
+        if (this.currentScene != "gameScene") {
+          this.app.ticker.remove(gameLoop);
+        }
+        this.receiveFlag = false;
+      }
+    };
+    this.app.ticker.add(gameLoop);
+  }
+
+  updateView(lightCanvas: PIXI.Graphics, segments: any) {
+    const position = [
+      this.player.x + this.player.width / 2,
+      this.player.y + this.player.height / 2,
+    ];
+    let visibility = VisibilityPolygon.computeViewport(
+      position,
+      segments,
+      [this.player.x - 500, this.player.y - 500],
+      [this.player.x + 500, this.player.y + 500]
+    );
+    lightCanvas.clear();
+    lightCanvas.beginFill(0x444444);
+    this.player.maskCanvas.clear();
+    this.player.maskCanvas.beginFill(0xffff00);
+    const startX = visibility[0][0] + this.offsetX;
+    const startY = visibility[0][1] + this.offsetY;
+    lightCanvas.moveTo(startX, startY);
+    this.player.maskCanvas.moveTo(startX, startY);
+    for (var j = 1; j <= visibility.length; j++) {
+      const endX = visibility[j % visibility.length][0] + this.offsetX;
+      const endY = visibility[j % visibility.length][1] + this.offsetY;
+      lightCanvas.lineTo(endX, endY);
+      this.player.maskCanvas.lineTo(endX, endY);
+    }
+    lightCanvas.endFill();
+    this.player.maskCanvas.endFill();
+  }
+
+  drawPlayers(delta: number, gameCanvas: PIXI.Container) {
+    var lerp = (s: number, e: number, t: number) =>
+      (e - s) * (1 - Math.pow(1 - 0.1, 60 * t)) + s;
+    this.globalPlayers.forEach((p: any, i: number) => {
+      let op;
+      if (p.ID === game.player.id) {
+        op = game.player;
+
+        if (op.isV != p.IsInvisible) {
+          if (p.IsInvisible) op.enalbeInvisible();
+          else op.disableInvisible();
+        }
+        if (op.show != p.Show) {
+          if (p.Show) game.ePlayer.cont.mask = null;
+          else game.ePlayer.cont.mask = game.player.maskCanvas;
+        }
+        if (op.rader != p.Rader) game.player.raderArrow.visible = p.Rader;
+        if (!game.receiveFlag) {
+          if (op.key & Math.pow(2, 0)) p.vx = -p.mv;
+          if (op.key & Math.pow(2, 1)) p.vy = -p.mv;
+          if (op.key & Math.pow(2, 2)) p.vx = p.mv;
+          if (op.key & Math.pow(2, 3)) p.vy = p.mv;
+          if (
+            (op.key & Math.pow(2, 0)) == 0 &&
+            (op.key & Math.pow(2, 2)) == 0
+          ) {
+            p.vx = 0;
+          }
+          if (
+            (op.key & Math.pow(2, 1)) == 0 &&
+            (op.key & Math.pow(2, 3)) == 0
+          ) {
+            p.vy = 0;
+          }
+        }
+      } else {
+        op = game.ePlayer;
+        if (op.isV != p.IsInvisible) {
+          if (p.IsInvisible) op.cont.visible = false;
+          else op.cont.visible = true;
+        }
+      }
+
+      op.lastSpace = p.Key & 16;
+
+      op.hp = p.HP;
+      op.C = p.Charge;
+      op.MC = p.MaxCharge;
+      op.BT = p.BT;
+      op.itemStock = p.ItemStock;
+      op.effect = p.Effect;
+      op.isV = p.IsInvisible;
+      op.rader = p.Rader;
+      op.show = p.Show;
+      op.Sp = p.SpaceCount;
+      op.R = p.rotate;
+      if (op.hp != op.lastHp) {
+        if (op.id === game.player.id) {
+          if (p.ID === op.id) {
+            op.HPbar.width = op.hp;
+            op.disPlayeffect.visible = true;
+            op.effectTimer = 0;
+            if (op.hp < op.lastHp) {
+              op.disPlayeffect.tint = 0xff0000;
+              op.chageHp = 1;
+            } else if (op.hp > op.lastHp) {
+              op.chageHp = 2;
+              op.disPlayeffect.tint = 0x00ff00;
+            }
+          }
+        } else {
+          if (setting.setting["show_damage"] && op.lastHp - op.hp > 0) {
+            game.renderObject.push(
+              new DamageNum(
+                Math.random() * (p.width - 10) + p.x,
+                Math.random() * (p.width - 10) + p.y,
+                op.lastHp - op.hp
+              ).onStage(gameCanvas)
+            );
+          }
+        }
+      }
+      op.lastHp = p.HP;
+      if (op.hp <= 0) {
+        setEndScene(op == game.player ? 1 : 0);
+        changeScene("endScene");
+        loadProfile();
+      }
+
+      let point = collisionMap(p.x + p.vx, p.y, this.globalMap);
+      if (!point) {
+        op.x += p.vx * delta;
+      } else {
+        if (p.vx < 0) {
+          op.x = (point.x + 1) * 30;
+        } else if (p.vx > 0) {
+          op.x = point.x * 30 - 30;
+        }
+      }
+      point = collisionMap(p.x, p.y + p.vy, this.globalMap);
+      if (!point) {
+        op.y += p.vy * delta;
+      } else {
+        if (p.vy < 0) {
+          op.y = (point.y + 1) * 30;
+        } else if (p.vy > 0) {
+          op.y = point.y * 30 - 30;
+        }
+      }
+      if (game.receiveFlag) {
+        if (Math.abs(op.x - p.x) > 10) op.x = p.x;
+        if (Math.abs(op.y - p.y) > 10) op.y = p.y;
+      }
+
+      if (op == game.player) {
+        game.offsetX = 250 - op.x;
+        game.offsetX = Math.min(game.offsetX, 0);
+        game.offsetX = Math.max(
+          game.offsetX,
+          500 - this.globalMap[0].length * 30
+        );
+        game.offsetY = 250 - op.y;
+        game.offsetY = Math.min(game.offsetY, 0);
+        game.offsetY = Math.max(game.offsetY, 500 - this.globalMap.length * 30);
+      }
+
+      op.width = p.width;
+      op.height = p.height;
+      op.update();
+    });
   }
 }
 
@@ -302,7 +671,8 @@ export class Player extends GameObject {
     public height: number,
     public id: number,
     public hp: number,
-    public skin: number
+    public skin: number,
+    public isPlayer: boolean
   ) {
     super(x, y, width, height);
     this.lastX = this.lastY = 0;
@@ -360,6 +730,26 @@ export class Player extends GameObject {
       this.raderArrow.rotation =
         Math.atan2(game.ePlayer.y - this.y, game.ePlayer.x - this.x) +
         Math.PI / 2;
+    if (this.isPlayer) {
+      game.chargeGage.position.set(
+        this.x + game.offsetX,
+        this.y - 20 + game.offsetY
+      );
+      if (this.Sp > 10 || this.Sp == 0)
+        game.chargeGage.width = (Math.min(this.Sp, 150) / 150) * this.width;
+      if (this.Sp >= 150) game.chargeGage.tint = 0x00ff00;
+      else game.chargeGage.tint = 0xff0000;
+      if ((this.key & 128) > 0 && (this.item ?? false)) this.item.isDead = true;
+
+      if (this.chageHp != 0) {
+        this.disPlayeffect.alpha = (50 - this.effectTimer) / 90;
+        this.effectTimer++;
+        if (this.effectTimer > 50) {
+          this.chageHp = 0;
+          this.effectTimer = 0;
+        }
+      }
+    }
   }
   onStage(app: PIXI.Container) {
     this.renderBody.beginFill(this.bodyColor);

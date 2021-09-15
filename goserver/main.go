@@ -490,6 +490,9 @@ func loopInstance() {
 							p.SpaceCount++
 							if p.SpaceCount%15 == 0 {
 								p.C--
+								if p.C < 0 {
+									p.C = 0
+								}
 							}
 						}
 						if p.lastSpace > 0 && (p.Key&key["space"] == 0) {
