@@ -530,7 +530,7 @@ func loopInstance() {
 
 								// var i interface{}
 								// json.Unmarshal([]byte(mysteriousJSON), &i)
-								req, _ := http.NewRequest("POST", "http://localhost:50000/pointUpdate", bytes.NewBuffer([]byte(mysteriousJSON)))
+								req, _ := http.NewRequest("POST", "http://localhost/pointUpdate", bytes.NewBuffer([]byte(mysteriousJSON)))
 								client.Do(req)
 								// body, _ := io.ReadAll(resp.Body)
 							}
@@ -552,6 +552,12 @@ func loopInstance() {
 					if len(v.cl) == 2 {
 						v.rMP.Item = []Item{}
 					}
+				}
+			}
+			for _, c := range v.cl {
+				err := c.WriteJSON(v.rMP)
+				if err != nil {
+					c.Close()
 				}
 			}
 

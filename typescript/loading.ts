@@ -296,7 +296,9 @@ export class Game {
     while (i--) {
       this.renderObject[i].onStage(this.gameScenes["gameScene"]);
     }
+
     this.app.stage.addChild(this.gameScenes["gameScene"]);
+
     var segments = VisibilityPolygon.convertToSegments(pol);
     segments = VisibilityPolygon.breakIntersections(segments);
     this.cycle = 0;
@@ -1140,9 +1142,10 @@ export class Bullet extends GameObject {
   }
   update(delta: number) {
     this.time += delta;
-
-    this.x += this.vx * delta;
-    this.y += this.vy * delta;
+    if (!game.receiveFlag) {
+      this.x += this.vx * delta;
+      this.y += this.vy * delta;
+    }
     this.bullet.x = this.x + game.offsetX;
     this.bullet.y = this.y + game.offsetY;
     if (this.time >= this.Life) this.isDead = true;
