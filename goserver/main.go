@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"math"
@@ -159,6 +158,7 @@ type returnMessagePlayer struct {
 	Player []player `json:"player"`
 	Item   []Item
 	Bullet []Bullet
+	// Time   int64
 }
 
 func (me *instance) Append(b BulletClass) {
@@ -543,6 +543,7 @@ func loopInstance() {
 					for _, b := range v.wrapperBullets {
 						v.rMP.Bullet = append(v.rMP.Bullet, b.GetMe())
 					}
+					// v.rMP.Time = time.Now().UnixNano() / 1000000
 					for _, c := range v.cl {
 						err := c.WriteJSON(v.rMP)
 						if err != nil {
@@ -554,12 +555,12 @@ func loopInstance() {
 					}
 				}
 			}
-			for _, c := range v.cl {
-				err := c.WriteJSON(v.rMP)
-				if err != nil {
-					c.Close()
-				}
-			}
+			// for _, c := range v.cl {
+			// 	err := c.WriteJSON(v.rMP)
+			// 	if err != nil {
+			// 		c.Close()
+			// 	}
+			// }
 
 		}
 		time.Sleep(time.Millisecond * 16)
@@ -591,7 +592,6 @@ func WebsocketGlobalServer(c echo.Context) error {
 	if err == nil {
 		p.sessionId = session.Value
 	}
-	fmt.Printf("%p", ws)
 	var Cinstance *instance
 	for v := range instances {
 		if len(v.cl) < 2 && !v.isLock {

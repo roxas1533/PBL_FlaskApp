@@ -18,7 +18,7 @@ export class Skin {
   static nowSkin: number;
   static changeSkin: number;
 }
-
+let magnification: number;
 export class Game {
   public cycle: number;
   public app: PIXI.Application;
@@ -89,14 +89,17 @@ export class Game {
         data.Bullet.forEach((bullet: any) => {
           for (let e of this.renderObject) {
             if (bullet.InnerId == e.getID()) {
-              Object.assign(e, bullet);
+              e.syncPosition(bullet);
               return;
             }
           }
 
           if (!(bullet.InnerId in Bullet.pushedBulletID)) {
             this.renderObject.push(
-              Object.assign(new Bullet(bullet.InnerId), bullet).onStage()
+              Object.assign(
+                new Bullet(bullet.InnerId, bullet.TimeStamp),
+                bullet
+              ).onStage()
             );
             Bullet.pushedBulletID.push(bullet.InnerId);
           }
@@ -302,22 +305,29 @@ export class Game {
     var segments = VisibilityPolygon.convertToSegments(pol);
     segments = VisibilityPolygon.breakIntersections(segments);
     this.cycle = 0;
+    let lastTime = Date.now();
     const gameLoop = (t: number) => {
-      let delta = 60 / this.app.ticker.FPS;
+      magnification = 62.5 / this.app.ticker.FPS;
+      // console.log(
+      //   this.app.ticker.deltaTime,
+      //   this.app.ticker.deltaMS,
+      //   Date.now() - lastTime,
+      // );
+      lastTime = Date.now();
       this.timeSinceSync += t;
-      this.cycle += delta;
+      this.cycle += magnification;
       FPS.text = "" + this.app.ticker.FPS;
       for (let i = this.renderObject.length - 1; i >= 0; i--) {
-        this.renderObject[i].update(delta, this.offsetX, this.offsetY);
+        this.renderObject[i].update(magnification, this.offsetX, this.offsetY);
         if (this.renderObject[i].isDead) {
           this.renderObject[i].outStage();
           this.renderObject.splice(i, 1);
         }
       }
-      if (this.cycle >= 100 * delta) {
+      if (this.cycle >= 100 * magnification) {
         if (this.cycle % 100) Bullet.pushedBulletID = [];
         gameCanvas.visible = true;
-        this.drawPlayers(delta, gameCanvas);
+        this.drawPlayers(magnification, gameCanvas);
 
         this.updateView(lightCanvas, segments);
         mapContainer.position.set(this.offsetX, this.offsetY);
@@ -405,8 +415,6 @@ export class Game {
   }
 
   drawPlayers(delta: number, gameCanvas: PIXI.Container) {
-    var lerp = (s: number, e: number, t: number) =>
-      (e - s) * (1 - Math.pow(1 - 0.1, 60 * t)) + s;
     this.globalPlayers.forEach((p: any, i: number) => {
       let op;
       if (p.ID === game.player.id) {
@@ -476,10 +484,10 @@ export class Game {
           }
         } else {
           if (setting.setting["show_damage"] && op.lastHp - op.hp > 0) {
-            game.renderObject.push(
+            this.renderObject.push(
               new DamageNum(
-                Math.random() * (p.width - 10) + p.x,
-                Math.random() * (p.width - 10) + p.y,
+                Math.random() * (op.width - 10) + op.x,
+                Math.random() * (op.width - 10) + op.y,
                 op.lastHp - op.hp
               ).onStage(gameCanvas)
             );
@@ -488,7 +496,7 @@ export class Game {
       }
       op.lastHp = p.HP;
       if (op.hp <= 0) {
-        setEndScene(op == game.player ? 1 : 0);
+        setEndScene(op == this.player ? 1 : 0);
         changeScene("endScene");
         loadProfile();
       }
@@ -876,6 +884,7 @@ class RenderObject extends GameObject {
   getID(): number {
     return 0;
   }
+  syncPosition(b: any) {}
 }
 
 export class Item extends RenderObject {
@@ -1004,17 +1013,17 @@ export class DamageNum extends RenderObject {
       fontSize: 11,
       fill: 0xffffff,
     });
-    this.text.position.set(x + game.offsetX, y + game.offsetX);
     this.g = 0.6;
   }
 
   update(delta: number, offsetX: number, offsetY: number) {
     super.update(delta, offsetX, offsetY);
+
     this.x += this.vx;
     this.y += this.vy;
     this.vy += this.g;
     this.vy = Math.min(this.vy, 6);
-    this.text.position.set(this.x + offsetX, this.y + offsetX);
+    this.text.position.set(this.x + offsetX, this.y + offsetY);
     if (this.time > 17) this.text.alpha -= 0.2;
     if (this.time > 22) this.isDead = true;
   }
@@ -1130,8 +1139,11 @@ export class Bullet extends GameObject {
   public IsSpireA: boolean;
   public IsReflectA: boolean;
   public Life: number;
+  public nextX: number;
+  public nextY: number;
+  private history: number[][];
   ID: number;
-  constructor(public innerID: number) {
+  constructor(public innerID: number, public lastUpdate: number) {
     super(0, 0, 0, 0);
     this.time = 0;
     this.bullet = new PIXI.Graphics();
@@ -1139,13 +1151,27 @@ export class Bullet extends GameObject {
     this.IsReflectA = false;
     this.Life = 0;
     this.ID = 0;
+    this.history = [];
+    this.nextX = this.nextY = 0;
+  }
+  syncPosition(b: any) {
+    this.nextX = b.x;
+    this.nextY = b.y;
+    this.lastUpdate = b.TimeStamp;
+    if (Math.abs(b.x - this.x) > 5) this.x = b.x;
+    if (Math.abs(b.y - this.y) > 5) this.y = b.y;
   }
   update(delta: number) {
     this.time += delta;
-    if (!game.receiveFlag) {
-      this.x += this.vx * delta;
-      this.y += this.vy * delta;
+    // var lerp = (s: number, e: number, t: number) =>
+    //   (e - s) * (1 - Math.pow(1 - 0.1, 60 * t)) + s;
+    this.x += this.vx * delta;
+    this.y += this.vy * delta;
+    this.history.push([Date.now(), this.x, this.y]);
+    if (this.history.length >= 50) {
+      this.history.shift();
     }
+
     this.bullet.x = this.x + game.offsetX;
     this.bullet.y = this.y + game.offsetY;
     if (this.time >= this.Life) this.isDead = true;

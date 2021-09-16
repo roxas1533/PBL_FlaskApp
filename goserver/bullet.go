@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"math/rand"
+	"time"
 )
 
 type Bullet struct {
@@ -24,6 +25,7 @@ type Bullet struct {
 	Type       int
 	baseSpeed  float64
 	InnerId    int
+	TimeStamp  int64
 }
 type GunClass interface {
 	Shot(player *player, ins *instance)
@@ -75,6 +77,7 @@ func (me Bullet) Update(ins *instance) BulletClass {
 	me.Life--
 	me.X += float64(me.Vx)
 	me.Y += float64(me.Vy)
+	me.TimeStamp = time.Now().UnixNano() / 1000000
 	flag := false
 
 	if me.X <= 0 || me.Y <= 0 || me.X >= float64(len(Map[ins.MapID][0])*30) || me.Y >= float64(len(Map[ins.MapID])*30) {
@@ -158,6 +161,7 @@ func newBullet(player *player, me Bullet) *Bullet {
 	if player.isReflect {
 		me.IsReflectA = player.isReflect
 	}
+	me.TimeStamp = time.Now().UnixNano() / 1000000
 	return &me
 }
 func (me Gun) Shot(player *player, ins *instance) {
