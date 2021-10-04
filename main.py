@@ -62,7 +62,7 @@ def connectSQL():
         # host="127.0.0.1",
         host="pbl_sqldb_1",
         # unix_socket="/var/run/mysqld/mysqld.sock",
-        port=3307,
+        port=3306,
         user="root",
         password="root",
         db="sampleDB",
@@ -321,4 +321,4 @@ def handle_message(data):
 
 if __name__ == "__main__":
     # app.run(debug=True)
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=8000, debug=True)
