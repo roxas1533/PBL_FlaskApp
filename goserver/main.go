@@ -554,13 +554,14 @@ func loopInstance() {
 						v.rMP.Item = []Item{}
 					}
 				}
+			} else {
+				for _, c := range v.cl {
+					err := c.WriteJSON(v.rMP)
+					if err != nil {
+						c.Close()
+					}
+				}
 			}
-			// for _, c := range v.cl {
-			// 	err := c.WriteJSON(v.rMP)
-			// 	if err != nil {
-			// 		c.Close()
-			// 	}
-			// }
 
 		}
 		time.Sleep(time.Millisecond * 16)

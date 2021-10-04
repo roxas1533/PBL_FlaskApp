@@ -340,7 +340,7 @@ export class Game {
             (obj: Player) => {
               if (obj === this.player) {
                 if (
-                  this.globalItems[i].ID >= 1 &&
+                  this.globalItems[i].ID > 1 &&
                   this.globalItems[i].ID < 100
                 ) {
                   if (this.player.item ?? false) this.player.item.isDead = true;
@@ -429,23 +429,15 @@ export class Game {
           else game.ePlayer.cont.mask = game.player.maskCanvas;
         }
         if (op.rader != p.Rader) game.player.raderArrow.visible = p.Rader;
-        if (!game.receiveFlag) {
-          if (op.key & Math.pow(2, 0)) p.vx = -p.mv;
-          if (op.key & Math.pow(2, 1)) p.vy = -p.mv;
-          if (op.key & Math.pow(2, 2)) p.vx = p.mv;
-          if (op.key & Math.pow(2, 3)) p.vy = p.mv;
-          if (
-            (op.key & Math.pow(2, 0)) == 0 &&
-            (op.key & Math.pow(2, 2)) == 0
-          ) {
-            p.vx = 0;
-          }
-          if (
-            (op.key & Math.pow(2, 1)) == 0 &&
-            (op.key & Math.pow(2, 3)) == 0
-          ) {
-            p.vy = 0;
-          }
+        if (op.key & Math.pow(2, 0)) p.vx = -(p.mv + p.BaseSpeed);
+        if (op.key & Math.pow(2, 1)) p.vy = -(p.mv + p.BaseSpeed);
+        if (op.key & Math.pow(2, 2)) p.vx = p.mv + p.BaseSpeed;
+        if (op.key & Math.pow(2, 3)) p.vy = p.mv + p.BaseSpeed;
+        if ((op.key & Math.pow(2, 0)) == 0 && (op.key & Math.pow(2, 2)) == 0) {
+          p.vx = 0;
+        }
+        if ((op.key & Math.pow(2, 1)) == 0 && (op.key & Math.pow(2, 3)) == 0) {
+          p.vy = 0;
         }
       } else {
         op = game.ePlayer;
