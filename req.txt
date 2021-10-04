@@ -12,7 +12,7 @@ greenlet==1.1.0
 itsdangerous==2.0.1
 Jinja2==3.0.1
 MarkupSafe==2.0.1
-mod-wsgi==4.8.0
+uwsgi
 mypy-extensions==0.4.3
 numpy==1.21.0
 pathspec==0.8.1

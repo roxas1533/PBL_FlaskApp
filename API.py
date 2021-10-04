@@ -16,7 +16,7 @@ class SkinList:
         self.readSkin()
 
     def readSkin(self):
-        with open("/home/java/pbl/skinlist.csv") as f:
+        with open("skinlist.csv") as f:
             for i, s_line in enumerate(f):
                 if i == 0:
                     continue
