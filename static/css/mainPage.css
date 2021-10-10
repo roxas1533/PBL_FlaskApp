@@ -1,0 +1,21 @@
+table {
+  border-collapse: collapse;
+}
+th,
+td {
+  border: 1px solid #333;
+  white-space: nowrap;
+  padding: 5px 15px;
+  text-align: center;
+}
+summary {
+  cursor: pointer;
+}
+.flex {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+}
+.updatedetail {
+  width: 660px;
+}

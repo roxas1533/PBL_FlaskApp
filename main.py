@@ -298,4 +298,4 @@ if __name__ == "__main__":
     # subprocess.Popen(
     #     "{}/goserver/main".format(os.getcwd()), cwd="{}/goserver".format(os.getcwd())
     # )
-    app.run(host="0.0.0.0", port=80, debug=False)
+    app.run(host="0.0.0.0", port=80, debug=True)
