@@ -51,7 +51,7 @@ def updateDefaultSetting():
 
 
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode="threading")
+# socketio = SocketIO(app, async_mode="threading")
 # app.secret_key = os.environ["SECRET"].encode()
 app.secret_key = secret_key
 from flask_cors import CORS
@@ -77,7 +77,7 @@ defaultSetting = updateDefaultSetting()
 
 @app.route("/", methods=["GET", "POST"])
 def hello():
-    return render_template("index.html")
+    return redirect(url_for("game"))
 
 
 @app.route("/pointUpdate", methods=["POST"])
@@ -286,42 +286,11 @@ def favicon():
     )
 
 
-@socketio.on("connect", namespace="/test")
-def connect():
-    print("Clinet connected")
-
-
-@socketio.on("disconnect")
-def disconnect():
-    deleteClient(request.sid)
-
-
-@socketio.on("message")
-def handle_message(data):
-    emit("res", data, broadcast=True)
-
-
-@socketio.on("firstMessage")
-def handle_message(data):
-    room, num, ins = addClient(request.sid, socketio, app)
-    join_room(room)
-    emit("firstReturn", {"data": num, "room_name": room}, to=room)
-    emit("id", {"id": request.sid})
-    if num >= 2:
-        emit("firstData", ins.returnFirstData(), to=room)
-        thread = threading.Thread(target=ins.loopInstance)
-        thread.start()
-        print("thread Start")
-
-
-@socketio.on("keyBoard")
-def handle_message(data):
-    updateKeyboard(data[0], request.sid, data[1])
-
-
 if __name__ == "__main__":
     # app.run(debug=True)
     import subprocess
 
-    subprocess.Popen("/opt/app/pbl/goserver/main")
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    subprocess.Popen(
+        "{}/goserver/main".format(os.getcwd()), cwd="{}/goserver".format(os.getcwd())
+    )
+    app.run(host="0.0.0.0", port=5000, debug=False)
