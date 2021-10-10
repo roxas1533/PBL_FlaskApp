@@ -59,12 +59,12 @@ from flask_cors import CORS
 
 def connectSQL():
     return pymysql.connect(
-        # host="127.0.0.1",
-        host="pbl_sqldb_1",
+        host="127.0.0.1",
+        # host="pbl_sqldb_1",
         # unix_socket="/var/run/mysqld/mysqld.sock",
         port=3306,
         user="root",
-        password="root",
+        password="",
         db="sampleDB",
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
@@ -265,6 +265,10 @@ def regist():
                 re = cursor.fetchall()
                 conn.commit()
                 session["username"] = re[0]["name"]
+
+                sql = "insert settings (name) value(%s)"
+                cursor.execute(sql, (data["username"]))
+                conn.commit()
                 break
 
         except Exception as e:
@@ -272,6 +276,7 @@ def regist():
             if "user.name" in e:
                 return jsonify({"result": False, "reason": "既に使用されているユーザー名です"})
             else:
+                print(e)
                 return jsonify({"result": False, "reason": "不明なエラー"})
 
             # if "user.id" in e:
@@ -290,7 +295,7 @@ if __name__ == "__main__":
     # app.run(debug=True)
     import subprocess
 
-    subprocess.Popen(
-        "{}/goserver/main".format(os.getcwd()), cwd="{}/goserver".format(os.getcwd())
-    )
+    # subprocess.Popen(
+    #     "{}/goserver/main".format(os.getcwd()), cwd="{}/goserver".format(os.getcwd())
+    # )
     app.run(host="0.0.0.0", port=80, debug=False)
