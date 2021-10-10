@@ -70,7 +70,7 @@ export class Game {
     if (this.server ?? false) {
       this.server!.close();
     }
-    let host = window.location.host + ":3000";
+    let host = window.location.hostname + ":3000";
 
     this.server = new WebSocket(`ws://${host}/connect`);
     let myid = 0;
