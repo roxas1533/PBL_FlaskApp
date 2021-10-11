@@ -13,6 +13,7 @@ services:
       - 3307:3306
     expose:
       - 3307
+    hostname: pbl_sqldb_1
 
   python: # service名
     build:
