@@ -18,8 +18,8 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    # working_dir:
-    command: bash -c "git clone https://github.com/roxas1533/PBL_FlaskApp /opt/app/pbl && cd /opt/app/pbl && python main.py"
+    working_dir: /opt/app/pbl
+    command: bash -c " git pull && python main.py"
     tty: true
     expose:
       - "5000"
