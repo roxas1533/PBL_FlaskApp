@@ -295,7 +295,7 @@ if __name__ == "__main__":
     # app.run(debug=True)
     import subprocess
 
-    # subprocess.Popen(
-    #     "{}/goserver/main".format(os.getcwd()), cwd="{}/goserver".format(os.getcwd())
-    # )
-    app.run(host="0.0.0.0", port=80, debug=True)
+    subprocess.Popen(
+        "{}/goserver/main".format(os.getcwd()), cwd="{}/goserver".format(os.getcwd())
+    )
+    app.run(host="0.0.0.0", port=80, debug=False)
