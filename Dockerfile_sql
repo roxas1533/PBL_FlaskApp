@@ -1,4 +1,3 @@
 FROM mysql
 # ADD ./my.conf /etc/mysql/conf.d/my.conf
 CMD ["mysqld"]
-COPY export.sql /
