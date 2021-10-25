@@ -1,0 +1,7 @@
+build:
+  docker:
+    web: Dockerfile
+  config:
+    WORKDIR: /opt/app/pbl
+run:
+  web: git pull && python main.py

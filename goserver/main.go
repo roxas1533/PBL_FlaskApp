@@ -530,7 +530,7 @@ func loopInstance() {
 
 								// var i interface{}
 								// json.Unmarshal([]byte(mysteriousJSON), &i)
-								req, _ := http.NewRequest("POST", "http://localhost:5000/pointUpdate", bytes.NewBuffer([]byte(mysteriousJSON)))
+								req, _ := http.NewRequest("POST", "http://localhost"+os.Getenv("PORT")+"/pointUpdate", bytes.NewBuffer([]byte(mysteriousJSON)))
 								client.Do(req)
 								// body, _ := io.ReadAll(resp.Body)
 							}
@@ -633,7 +633,7 @@ func WebsocketGlobalServer(c echo.Context) error {
 
 			client := &http.Client{}
 			if p.sessionId != "" {
-				req, _ := http.NewRequest("POST", "http://localhost:5000/getName", strings.NewReader(p.sessionId))
+				req, _ := http.NewRequest("POST", "http://localhost"+os.Getenv("PORT")+"/getName", strings.NewReader(p.sessionId))
 				resp, _ := client.Do(req)
 				body, _ := io.ReadAll(resp.Body)
 				json.Unmarshal(body, &po)
