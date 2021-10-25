@@ -4,4 +4,4 @@ build:
   config:
     WORKDIR: /opt/app/pbl
 run:
-  web: git pull && python main.py
+  web: python main.py
