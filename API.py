@@ -38,10 +38,11 @@ skinlist = SkinList()
 def setSkin(conn, session, skinid):
     skinid = min(len(skinlist) - 1, int(skinid))
     try:
-        with conn.cursor() as cursor:
-            sql = "update user set skin=%s where name=%s"
-            cursor.execute(sql, (skinid, session["username"]))
-            conn.commit()
+        cursor = conn.cursor()
+        sql = "update user set skin=? where name=?"
+        cursor.execute(sql, (skinid, session["username"]))
+        conn.commit()
+        conn.close()
         return {"result": True}
     except Exception as e:
         e = str(e)
@@ -51,27 +52,28 @@ def setSkin(conn, session, skinid):
 def setSetting(conn, session, setting):
     try:
         setting = json.loads(setting)
-        with conn.cursor() as cursor:
-            sql = "update settings set show_damage=%s,view_num=%s,upkey=%s,downkey=%s,rightkey=%s,\
-                leftkey=%s,firekey=%s,useitemkey=%s,rightarmrkey=%s,leftarmrkey=%s \
-                where name=%s"
-            cursor.execute(
-                sql,
-                (
-                    setting["show_damage"],
-                    setting["view_num"],
-                    setting["upkey"],
-                    setting["downkey"],
-                    setting["rightkey"],
-                    setting["leftkey"],
-                    setting["firekey"],
-                    setting["useitemkey"],
-                    setting["rightarmrkey"],
-                    setting["leftarmrkey"],
-                    session["username"],
-                ),
-            )
-            conn.commit()
+        cursor = conn.cursor()
+        sql = "update settings set show_damage=?,view_num=?,upkey=?,downkey=?,rightkey=?,\
+            leftkey=?,firekey=?,useitemkey=?,rightarmrkey=?,leftarmrkey=? \
+            where name=?"
+        cursor.execute(
+            sql,
+            (
+                setting["show_damage"],
+                setting["view_num"],
+                setting["upkey"],
+                setting["downkey"],
+                setting["rightkey"],
+                setting["leftkey"],
+                setting["firekey"],
+                setting["useitemkey"],
+                setting["rightarmrkey"],
+                setting["leftarmrkey"],
+                session["username"],
+            ),
+        )
+        conn.commit()
+        conn.close()
         return {"result": True}
     except Exception as e:
         e = str(e)
@@ -92,15 +94,16 @@ def getProfile(conn, session):
 
 def getUserSkin(conn, session):
     try:
-        with conn.cursor() as cursor:
-            sql = "select skin from user where name=%s"
-            cursor.execute(sql, (session["username"],))
-            re = cursor.fetchall()
-            if len(re) == 0:
-                return {"result": False, "reason": "存在しないユーザー名"}
-            if len(re) > 1:
-                raise Exception("複数一致")
-        return re[0]["skin"]
+        cursor = conn.cursor()
+        sql = "select skin from user where name=?"
+        cursor.execute(sql, (session["username"],))
+        re = cursor.fetchall()
+        if len(re) == 0:
+            return {"result": False, "reason": "存在しないユーザー名"}
+        if len(re) > 1:
+            raise Exception("複数一致")
+        conn.close()
+        return re[0]
     except Exception as e:
         e = str(e)
         print("getUserSkinエラー", e)
@@ -109,24 +112,26 @@ def getUserSkin(conn, session):
 
 def getProfileFromName(conn, name):
     try:
-        with conn.cursor() as cursor:
-            sql = "select * from user where name=%s"
-            cursor.execute(sql, (name,))
-            re = cursor.fetchall()
-            if len(re) == 0:
-                return {"result": False, "reason": "存在しないユーザー名"}
-            if len(re) > 1:
-                raise Exception("複数一致")
-            win = re[0]["win"]
-            lose = re[0]["lose"]
-            win_rato = 0 if win == 0 else win / (win + lose) * 100
+        cursor = conn.cursor()
+        sql = "select * from user where name=?"
+        cursor.execute(sql, (name,))
+        re = cursor.fetchall()
+        if len(re) == 0:
+            return {"result": False, "reason": "存在しないユーザー名"}
+        if len(re) > 1:
+            raise Exception("複数一致")
+
+        win = re[0][4]
+        lose = re[0][5]
+        win_rato = 0 if win == 0 else win / (win + lose) * 100
+        conn.close()
         return {
             "result": True,
-            "win": re[0]["win"],
-            "lose": re[0]["lose"],
+            "win": win,
+            "lose": lose,
             "win_rato": round(win_rato, 1),
-            "cv": re[0]["cv"],
-            "skin": re[0]["skin"],
+            "cv": re[0][6],
+            "skin": re[0][7],
         }
     except Exception as e:
         e = str(e)

@@ -28,9 +28,8 @@ import time
 import datetime
 import json
 import hashlib
-from flask_socketio import SocketIO, emit, join_room
 from engineio.payload import Payload
-import pymysql.cursors
+import sqlite3
 
 Payload.max_decode_packets = 50
 import logging
@@ -38,37 +37,40 @@ import logging
 
 # log = logging.getLogger("werkzeug")
 # log.setLevel(logging.ERROR)
+settingDict = [
+    "name",
+    "show_damage",
+    "view_num",
+    "upkey",
+    "downkey",
+    "rightkey",
+    "leftkey",
+    "firekey",
+    "useitemkey",
+    "rightarmrkey",
+    "leftarmrkey",
+]
 
 
 def updateDefaultSetting():
     conn = connectSQL()
-    with conn.cursor() as cursor:
-        cursor.execute("select * from settings where name='default'")
-        re = cursor.fetchall()
-        if len(re) != 1:
-            raise ValueError("error!")
-    return re[0]
+    cursor = conn.cursor()
+    cursor.execute("select * from settings where name='default'")
+    re = cursor.fetchall()
+    if len(re) != 1:
+        raise ValueError("error!")
+    conn.close()
+    return {settingDict[i]: re[0][i] for i in range(len(re[0]))}
 
 
 app = Flask(__name__)
 # socketio = SocketIO(app, async_mode="threading")
 # app.secret_key = os.environ["SECRET"].encode()
 app.secret_key = secret_key
-from flask_cors import CORS
 
 
 def connectSQL():
-    return pymysql.connect(
-        # host="127.0.0.1",
-        host="pbl_sqldb_1",
-        # unix_socket="/var/run/mysqld/mysqld.sock",
-        port=3306,
-        user="root",
-        password="root",
-        db="sampleDB",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
+    return sqlite3.connect("sampleDB.db")
 
 
 defaultSetting = None
@@ -90,14 +92,13 @@ def pointupdate():
     win = data["win"]
     try:
         conn = connectSQL()
-        with conn.cursor() as cursor:
-            sql = (
-                "update user set win=win+%s ,lose=lose+%s, cv={} where name=%s".format(
-                    "cv+1" if win else 0
-                )
-            )
-            cursor.execute(sql, (win + 0, (not win) + 0, name))
+        cursor = conn.cursor()
+        sql = "update user set win=win+? ,lose=lose+?, cv={} where name=?".format(
+            "cv+1" if win else 0
+        )
+        cursor.execute(sql, (win + 0, (not win) + 0, name))
         conn.commit()
+        conn.close()
         # re = cursor.fetchall()
         return jsonify({"result": True})
     except Exception as e:
@@ -177,12 +178,13 @@ def setting():
 
     conn = connectSQL()
 
-    with conn.cursor() as cursor:
-        cursor.execute("select * from settings where name=%s", session["username"])
-        re = cursor.fetchall()
-        if len(re) != 1:
-            raise ValueError("error!")
-    re = re[0]
+    cursor = conn.cursor()
+    cursor.execute("select * from settings where name=?", (session["username"],))
+    re = cursor.fetchall()
+    if len(re) != 1:
+        raise ValueError("error!")
+    re = {settingDict[i]: re[0][i] for i in range(len(re[0]))}
+    conn.close()
     settingmain = render_template(
         "setting.html",
     )
@@ -230,15 +232,16 @@ def login():
     password = hashlib.sha256(data["password"].encode("utf-8")).hexdigest()
     try:
         conn = connectSQL()
-        with conn.cursor() as cursor:
-            sql = "select * from user where name=%s and password=%s"
-            cursor.execute(sql, (data["username"], password))
-            re = cursor.fetchall()
-            if len(re) == 0:
-                return jsonify({"result": False, "reason": "ユーザー名またはパスワードが違います"})
-            if len(re) > 1:
-                raise Exception("複数一致")
-            session["username"] = re[0]["name"]
+        cursor = conn.cursor()
+        sql = "select name from user where name=? and password=?"
+        cursor.execute(sql, (data["username"], password))
+        re = cursor.fetchall()
+        if len(re) == 0:
+            return jsonify({"result": False, "reason": "ユーザー名またはパスワードが違います"})
+        if len(re) > 1:
+            raise Exception("複数一致")
+        session["username"] = re[0][0]
+        conn.close()
         return jsonify({"result": True})
     except Exception as e:
         e = str(e)
@@ -254,22 +257,23 @@ def regist():
     while True:
         try:
             conn = connectSQL()
-            with conn.cursor() as cursor:
-                sql = "insert user (id,name,password) value({},%s,%s)".format(
-                    random.randint(0, 100000)
-                )
-                cursor.execute(sql, (data["username"], password))
+            cursor = conn.cursor()
+            sql = "insert user (id,name,password) value({},?,?)".format(
+                random.randint(0, 100000)
+            )
+            cursor.execute(sql, (data["username"], password))
 
-                sql = "select * from user where name=%s and password=%s"
-                cursor.execute(sql, (data["username"], password))
-                re = cursor.fetchall()
-                conn.commit()
-                session["username"] = re[0]["name"]
+            sql = "select name from user where name=? and password=?"
+            cursor.execute(sql, (data["username"], password))
+            re = cursor.fetchall()
+            conn.commit()
+            session["username"] = re[0][0]
 
-                sql = "insert settings (name) value(%s)"
-                cursor.execute(sql, (data["username"]))
-                conn.commit()
-                break
+            sql = "insert settings (name) value(?)"
+            cursor.execute(sql, (data["username"]))
+            conn.commit()
+            conn.close()
+            break
 
         except Exception as e:
             e = str(e)
