@@ -1,31 +1,32 @@
 <html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <title>ログイン</title>
-        <link rel="stylesheet" href="static/css/styleGame.css" type="text/css">
-    <script src="static/js/login.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ログイン</title>
+    <link rel="stylesheet" href="static/css/styleGame.css" type="text/css" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-    </head>
-    <body>
-        <div class=login_field>
-            <div id=wrappedNewR>
-                <a href="/regist" id=newR>新規登録</a>
-            </div>
+    <script src="static/js/login.js"></script>
+  </head>
+  <body>
+    <div class="login_field">
+      <div id="wrappedNewR">
+        <a href="/regist" id="newR">新規登録</a>
+      </div>
+    </div>
+    <div class="regist_form">
+      <h2>ログイン</h2>
+      <div class="formWrap">
+        <div style="display: flex">
+          <span>名前:</span>
+          <span id="error" style="color: #e96a6a"></span>
         </div>
-        <div class=regist_form>
-            <h2>ログイン</h2>
-            <div class=formWrap>
-                <div style="display: flex">
-                    <span>名前:</span>
-                    <span id=error style="color: #e96a6a;"></span>
-                </div>
-                <input type="text" name="name" class=form id="name">
-                <span>パスワード:</span>
-                <input type="password" name="password" class=form id="password">
-            <div id=register onclick="login();">
-                <div id=regsiterText>ログイン</div>
-            </div>
+        <input type="text" name="name" class="form" id="name" />
+        <span>パスワード:</span>
+        <input type="password" name="password" class="form" id="password" />
+        <div id="register" onclick="login();">
+          <div id="regsiterText">ログイン</div>
         </div>
-        </div>
-    </body>
+      </div>
+    </div>
+  </body>
 </html>
