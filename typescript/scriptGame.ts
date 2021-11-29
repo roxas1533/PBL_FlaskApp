@@ -80,7 +80,7 @@ export function setTitleScene() {
     button.lineStyle(1, 0xffffff);
     button.drawRect(250 - 150 / 2, 300, 150, 50);
   });
-  button.on("mouseup", (e) => {
+  button.on("pointerup", (e) => {
     setLoadinScene();
     changeScene("loadingScene");
     game.connectServer();
@@ -180,7 +180,7 @@ export function setEndScene(winlose: number) {
     button.lineStyle(1, 0xffffff);
     button.drawRect(250 - 150 / 2, 300, 150, 50);
   });
-  button.on("mouseup", (e) => {
+  button.on("pointerup", (e) => {
     game.app = new PIXI.Application({
       width: 500,
       height: 550,

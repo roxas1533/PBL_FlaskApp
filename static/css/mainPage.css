@@ -17,5 +17,5 @@ summary {
   align-items: center;
 }
 .updatedetail {
-  width: 660px;
+  max-width: 660px;
 }

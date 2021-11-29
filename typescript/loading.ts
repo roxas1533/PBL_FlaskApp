@@ -584,6 +584,27 @@ window.addEventListener("load", () => {
           game.player.key &= ~game.player.keyPow[inputKey];
       }
     });
+    const touchControl = document.getElementById("touchControl")!.children;
+    for (let i = 0; i < touchControl.length; i++) {
+      touchControl[i].addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        const button = <HTMLElement>e.currentTarget;
+        button.classList.add("tourch-button-pushed");
+        if (game.currentScene == "gameScene") {
+          game.player.key |= game.player.keyPow[button.getAttribute("data")!];
+        }
+      });
+    }
+    for (let i = 0; i < touchControl.length; i++) {
+      touchControl[i].addEventListener("touchend", (e) => {
+        e.preventDefault();
+        const button = <HTMLElement>e.currentTarget;
+        button.classList.remove("tourch-button-pushed");
+        if (game.currentScene == "gameScene") {
+          game.player.key &= ~game.player.keyPow[button.getAttribute("data")!];
+        }
+      });
+    }
 
     setTitleScene();
   });
@@ -714,6 +735,11 @@ export class Player extends GameObject {
         return copySetting[key] === "SPACE";
       })[0]
     ] = " ";
+    const touchControl = document.getElementById("touchControl")!.children;
+    for (var i = 0, len = touchControl.length; i < len; i++) {
+      const keyName = touchControl[i].classList[1];
+      touchControl[i].setAttribute("data", copySetting[keyName]);
+    }
 
     this.keyPow[copySetting["leftkey"]] = Math.pow(2, 0);
     this.keyPow[copySetting["upkey"]] = Math.pow(2, 1);

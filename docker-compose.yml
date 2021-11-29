@@ -15,12 +15,12 @@ services:
       - 3307
     hostname: pbl_sqldb_1
 
-  python: # service名
+  python:
     build:
       context: ./
       dockerfile: Dockerfile
     working_dir: /opt/app/pbl
-    command: bash -c " git pull && python main.py"
+    command: bash -c "git pull && python main.py"
     tty: true
     expose:
       - "5000"

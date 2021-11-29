@@ -59,12 +59,12 @@ from flask_cors import CORS
 
 def connectSQL():
     return pymysql.connect(
-        # host="127.0.0.1",
-        host="pbl_sqldb_1",
+        host="127.0.0.1",
+        # host="pbl_sqldb_1",
         # unix_socket="/var/run/mysqld/mysqld.sock",
         port=3306,
         user="root",
-        password="root",
+        password="password",
         db="sampleDB",
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
@@ -295,7 +295,7 @@ if __name__ == "__main__":
     # app.run(debug=True)
     import subprocess
 
-    subprocess.Popen(
-        "{}/goserver/main".format(os.getcwd()), cwd="{}/goserver".format(os.getcwd())
-    )
-    app.run(host="0.0.0.0", port=80, debug=False)
+    # subprocess.Popen(
+    #     "{}/goserver/main".format(os.getcwd()), cwd="{}/goserver".format(os.getcwd())
+    # )
+    app.run(host="0.0.0.0", port=5000, debug=True)
