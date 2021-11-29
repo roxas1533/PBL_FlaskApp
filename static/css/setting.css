@@ -1,3 +1,6 @@
+.profileClass {
+  z-index: 100;
+}
 #Profile {
   position: absolute;
   width: 100vw;
@@ -16,9 +19,9 @@
   align-items: center;
 }
 .profileWrapper {
-  width: 40%;
+  width: 50%;
   height: 60%;
-  min-width: 450px;
+  min-width: 375px;
   min-height: 550px;
   background-color: #101010;
   border: 2px solid #59a6ff;

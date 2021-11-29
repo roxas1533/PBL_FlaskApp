@@ -157,7 +157,7 @@ function changeKey(obj: HTMLDivElement) {
   const body = document.querySelector("html body");
   body!.insertAdjacentHTML(
     "afterend",
-    `<div class="overray" tabindex="0" id=keyoverray onclick="this.remove()" style="flex-direction: column;">
+    `<div class="overray" tabindex="0" id=keyoverray onclick="this.remove()" style="flex-direction: column;z-index:101">
   <h1 style="color:white;">割り当てるキーを入力してください。</h1>
   <div class="spinner-box">
   <div class="configure-border-1"></div>  
