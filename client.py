@@ -70,13 +70,11 @@ def addClient(newClientId, socketio, app):
     for instance in instances:
         if 0 < len(instance.clients) < 2:
             instance.clients.append(Client(newClientId, instance.room))
-            print(instances)
             return instance.room, 2, instance
 
     instance = Instance(socketio, app)
     instance.clients.append(Client(newClientId, instance.room))
     instances.append(instance)
-    print(instances)
     return instance.room, 1, None
 
 

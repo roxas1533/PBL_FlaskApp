@@ -45,6 +45,7 @@ def setSkin(conn, session, skinid):
         return {"result": True}
     except Exception as e:
         e = str(e)
+        print("setSkin-Error!", e)
         return {"result": False, "reason": "不明なエラー"}
 
 
@@ -52,30 +53,16 @@ def setSetting(conn, session, setting):
     try:
         setting = json.loads(setting)
         with conn.cursor() as cursor:
-            sql = "update settings set show_damage=%s,view_num=%s,upkey=%s,downkey=%s,rightkey=%s,\
-                leftkey=%s,firekey=%s,useitemkey=%s,rightarmrkey=%s,leftarmrkey=%s \
-                where name=%s"
-            cursor.execute(
-                sql,
-                (
-                    setting["show_damage"],
-                    setting["view_num"],
-                    setting["upkey"],
-                    setting["downkey"],
-                    setting["rightkey"],
-                    setting["leftkey"],
-                    setting["firekey"],
-                    setting["useitemkey"],
-                    setting["rightarmrkey"],
-                    setting["leftarmrkey"],
-                    session["username"],
-                ),
+            name = setting.pop("name")
+            sql = "update settings set {} where name=%s".format(
+                ", ".join("{}=%s".format(k) for k in setting)
             )
+            cursor.execute(sql, (list(setting.values()) + [name]))
             conn.commit()
         return {"result": True}
     except Exception as e:
         e = str(e)
-        print(e)
+        print("setSettingError!", e)
         return {"result": False, "reason": "不明なエラー"}
 
 

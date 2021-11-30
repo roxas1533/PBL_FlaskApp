@@ -94,11 +94,18 @@ function changesetting(obj: HTMLDivElement) {
     case "0":
       settingcontent!.insertAdjacentHTML("afterbegin", setting.gamesetting);
       const show_damage: HTMLInputElement = <HTMLInputElement>(
-        document.getElementById("cb_toggle_switch")
+        document.getElementById("showDamage")
       );
       show_damage!.checked = setting.tempSetting["show_damage"];
       show_damage.addEventListener("change", (e) => {
         setting.tempSetting["show_damage"] = +show_damage.checked;
+      });
+      const showFps: HTMLInputElement = <HTMLInputElement>(
+        document.getElementById("showFps")
+      );
+      showFps.checked = setting.tempSetting["show_fps"];
+      showFps.addEventListener("change", (e) => {
+        setting.tempSetting["show_fps"] = +showFps.checked;
       });
       //   num = document.getElementById("num");
       //   num.innerText = viewnum.value;

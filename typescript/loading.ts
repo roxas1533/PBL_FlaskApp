@@ -220,12 +220,12 @@ export class Game {
     this.chargeGage.position.set(this.player.x, this.player.y - 20);
     this.chargeGage.tint = 0xff0000;
     gameCanvas.addChild(this.chargeGage);
-    const FPS = new PIXI.Text(this.app.ticker.FPS + "", {
+    const FPS = new PIXI.Text(Math.round(this.app.ticker.FPS * 10) / 10 + "", {
       fontFamily: "Arial",
-      fontSize: 10,
+      fontSize: 12,
       fill: 0xffffff,
     });
-    gameCanvas.addChild(FPS);
+    if (setting.setting["show_fps"]) gameCanvas.addChild(FPS);
 
     let UIback = new PIXI.Graphics();
     UIback.beginFill(0);
@@ -308,15 +308,10 @@ export class Game {
     let lastTime = Date.now();
     const gameLoop = (t: number) => {
       magnification = 62.5 / this.app.ticker.FPS;
-      // console.log(
-      //   this.app.ticker.deltaTime,
-      //   this.app.ticker.deltaMS,
-      //   Date.now() - lastTime,
-      // );
       lastTime = Date.now();
       this.timeSinceSync += t;
       this.cycle += magnification;
-      FPS.text = "" + this.app.ticker.FPS;
+      FPS.text = "" + Math.round(this.app.ticker.FPS * 10) / 10;
       for (let i = this.renderObject.length - 1; i >= 0; i--) {
         this.renderObject[i].update(magnification, this.offsetX, this.offsetY);
         if (this.renderObject[i].isDead) {

@@ -12,8 +12,6 @@ function loadSkinList() {
     .then((res) => {
       res = JSON.parse(res);
       skinlist = res["list"];
-      console.log(skinlist);
-      console.log(skinlist);
       nowSkin = res["skin"];
       changeSkin = nowSkin;
     });
