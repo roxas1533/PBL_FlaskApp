@@ -12,9 +12,8 @@ summary {
   cursor: pointer;
 }
 .flex {
-  display: flex;
+  display: inline-flex;
   flex-flow: column;
-  align-items: center;
 }
 .updatedetail {
   max-width: 660px;

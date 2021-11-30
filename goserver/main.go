@@ -635,6 +635,10 @@ func WebsocketGlobalServer(c echo.Context) error {
 			if p.sessionId != "" {
 				req, _ := http.NewRequest("POST", "http://localhost/getName", strings.NewReader(p.sessionId))
 				resp, _ := client.Do(req)
+				if resp.StatusCode == 500{
+					req, _ = http.NewRequest("POST", "http://localhost:5000/getName", strings.NewReader(p.sessionId))
+					resp, _ = client.Do(req)
+				}
 				body, _ := io.ReadAll(resp.Body)
 				json.Unmarshal(body, &po)
 			}
