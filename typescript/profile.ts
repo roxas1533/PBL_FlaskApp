@@ -1,4 +1,5 @@
-import { setting, Skin } from "./loading";
+import { Game } from "./Game";
+import { Skin } from "./Skin";
 
 let profile: string;
 let nowSetting = 0;
@@ -46,8 +47,8 @@ window.updateSetting = updateSetting;
 window.resertDefault = resertDefault;
 function openSetting() {
   const body = document.querySelector("html body");
-  body!.insertAdjacentHTML("afterbegin", setting.settingpage);
-  setting.stackSetting();
+  body!.insertAdjacentHTML("afterbegin", Game.setting.settingpage);
+  Game.setting.stackSetting();
   changesetting(<HTMLDivElement>document.getElementById("0"));
 }
 
@@ -92,33 +93,36 @@ function changesetting(obj: HTMLDivElement) {
   const settingcontent = document.getElementById("settingcontent");
   switch (obj.id) {
     case "0":
-      settingcontent!.insertAdjacentHTML("afterbegin", setting.gamesetting);
+      settingcontent!.insertAdjacentHTML(
+        "afterbegin",
+        Game.setting.gamesetting
+      );
       const show_damage: HTMLInputElement = <HTMLInputElement>(
         document.getElementById("showDamage")
       );
-      show_damage!.checked = setting.tempSetting["show_damage"];
+      show_damage!.checked = Game.setting.tempSetting["show_damage"];
       show_damage.addEventListener("change", (e) => {
-        setting.tempSetting["show_damage"] = +show_damage.checked;
+        Game.setting.tempSetting["show_damage"] = +show_damage.checked;
       });
       const showFps: HTMLInputElement = <HTMLInputElement>(
         document.getElementById("showFps")
       );
-      showFps.checked = setting.tempSetting["show_fps"];
+      showFps.checked = Game.setting.tempSetting["show_fps"];
       showFps.addEventListener("change", (e) => {
-        setting.tempSetting["show_fps"] = +showFps.checked;
+        Game.setting.tempSetting["show_fps"] = +showFps.checked;
       });
       //   num = document.getElementById("num");
       //   num.innerText = viewnum.value;
       //   viewnum.addEventListener("input", (e) => {
       //     num.innerText = e.target.value;
-      //     setting.tempSetting["view_num"] = e.target.value;
+      //     Game.setting.tempSetting["view_num"] = e.target.value;
       //   });
       break;
     case "1":
-      settingcontent!.insertAdjacentHTML("afterbegin", setting.keysetting);
+      settingcontent!.insertAdjacentHTML("afterbegin", Game.setting.keysetting);
       let keys = document.getElementsByClassName("key");
       Array.prototype.forEach.call(keys, (e) => {
-        e.innerHTML = setting.tempSetting[e.id];
+        e.innerHTML = Game.setting.tempSetting[e.id];
       });
       break;
   }
@@ -176,16 +180,16 @@ function changeKey(obj: HTMLDivElement) {
   keyoverray.focus();
   keyoverray.addEventListener("keyup", (e) => {
     obj.innerHTML = `${e.key == " " ? "SPACE" : e.key}`.toUpperCase();
-    setting.tempSetting[obj.id] = obj.innerHTML;
+    Game.setting.tempSetting[obj.id] = obj.innerHTML;
     keyoverray.remove();
   });
 }
 
 function updateSetting() {
-  setting.updateSetting();
+  Game.setting.updateSetting();
   fetch("http://" + window.location.host + "/updateSetting", {
     method: "POST",
-    body: JSON.stringify(setting.setting),
+    body: JSON.stringify(Game.setting.setting),
   }).then((response) => {
     if (!response.ok) {
       return Promise.reject(new Error("エラーです"));
@@ -195,6 +199,6 @@ function updateSetting() {
 }
 
 function resertDefault() {
-  setting.setDef();
+  Game.setting.setDef();
   changesetting(<HTMLDivElement>document.getElementById("0"));
 }

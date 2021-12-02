@@ -1,28 +1,35 @@
-{% extends "game.html" %}
-{% block loginInfo %}
+{% extends "game.html" %} {% block loginInfo %}
 <script src="static/js/logout.js"></script>
 <!-- <script src="static/js/profile.js"></script> -->
 
-<link rel="stylesheet" type="text/css" href="static/css/setting.css">
-<link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&family=Dosis:wght@500&display=swap" rel="stylesheet">
-<div class=component>
-    <div class=login_field>
-        <div class="profileWrap" onclick="openProfile();">
-            <div class="usericon">
-                <i class="fas fa-user"></i>
-            </div>
-            <div id="userProfile">{{username}}</div>
-        </div>
-        <div class="settingButton" onclick="openSetting();">
-            <div class="settingicon">
-                <i class="fas fa-cog"></i>
-            </div>
-        </div>
-
-        <div  id="logoutButton" onclick="logout();">ログアウト</div>
+<link rel="stylesheet" type="text/css" href="static/css/setting.css" />
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://use.fontawesome.com/releases/v5.6.1/css/all.css"
+/>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&family=Dosis:wght@500&display=swap"
+  rel="stylesheet"
+/>
+<div class="component">
+  <div class="login_field">
+    <div class="profileWrap" onclick="openProfile();">
+      <div class="usericon">
+        <i class="fas fa-user"></i>
+      </div>
+      <div id="userProfile">{{username}}</div>
     </div>
+    <div class="settingButton" onclick="openSetting();">
+      <div class="settingicon">
+        <i class="fas fa-cog"></i>
+      </div>
+    </div>
+    <a href="/login" style="margin-left: auto; margin-right: 10px">五目並べ</a>
+
+    <div id="logoutButton" onclick="logout();">ログアウト</div>
+  </div>
 </div>
 {% endblock %}

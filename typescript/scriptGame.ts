@@ -1,19 +1,12 @@
-import {
-  Skin,
-  Game,
-  Bullet,
-  Item,
-  Player,
-  collisionObject,
-  setting,
-  DamageNum,
-} from "./loading";
 import * as PIXI from "pixi.js";
 
-import { loadProfile } from "./profile";
+import { makeArialText } from "./utils";
+import { Item } from "./Item";
+import { Skin } from "./Skin";
+import { Bullet } from "./Bullet";
+import { Game } from "./Game";
 export const BT = [1, 3, 3, 10, 10, 5, 1, 10];
 
-export var game: Game;
 export function loadSkinList(callback: () => void) {
   fetch("http://" + window.location.host + "/getSkinList", {
     method: "POST",
@@ -34,29 +27,19 @@ export function loadSkinList(callback: () => void) {
     });
 }
 
-export function setUp() {
+export function setUp(resetGame = true) {
   const canvas = document.getElementById("canvas")!;
-  game = new Game();
+  if (resetGame) Game.game = new Game();
   while (canvas.lastChild) {
     canvas.removeChild(canvas.lastChild);
   }
-  canvas.appendChild(game.app.view);
+  canvas.appendChild(Game.app.view);
 }
 
 export function setTitleScene() {
-  game.app.ticker.maxFPS = 60;
-  game.app.ticker.minFPS = 60;
-  game.gameScenes["titleScene"] = new PIXI.Container();
-  const duelText = new PIXI.Text("DUEL", {
-    fontFamily: "Arial",
-    fontSize: 50,
-    fill: 0xffffff,
-  });
-  const startText = new PIXI.Text("START", {
-    fontFamily: "Arial",
-    fontSize: 30,
-    fill: 0xffffff,
-  });
+  Game.gameScenes["titleScene"] = new PIXI.Container();
+  const duelText = makeArialText("DUAL", 50);
+  const startText = makeArialText("START");
   duelText.position.set(250 - duelText.width / 2, 250);
   startText.position.set(
     250 - startText.width / 2,
@@ -81,82 +64,66 @@ export function setTitleScene() {
     button.drawRect(250 - 150 / 2, 300, 150, 50);
   });
   button.on("pointerup", (e) => {
-    setLoadinScene();
-    changeScene("loadingScene");
-    game.connectServer();
+    setWaitingScene();
+    Game.changeScene("waitingScene");
+    Game.game.connectServer();
   });
   button.addChild(startText);
-  game.gameScenes["titleScene"].addChild(duelText);
-  game.gameScenes["titleScene"].addChild(button);
-  game.app.stage.addChild(game.gameScenes["titleScene"]);
+  Game.gameScenes["titleScene"].addChild(duelText);
+  Game.gameScenes["titleScene"].addChild(button);
+  Game.app.stage.addChild(Game.gameScenes["titleScene"]);
 }
 
-function setLoadinScene() {
-  game.gameScenes["loadingScene"] = new PIXI.Container();
-  const duelText = new PIXI.Text("プレイヤーを待機中", {
-    fontFamily: "Arial",
-    fontSize: 30,
-    fill: 0xffffff,
-  });
+function setWaitingScene() {
+  Game.gameScenes["waitingScene"] = new PIXI.Container();
+  const duelText = makeArialText("プレイヤーを待機中");
   duelText.position.set(250 - duelText.width / 2, 250);
-  game.gameScenes["loadingScene"].addChild(duelText);
-  game.app.stage.addChild(game.gameScenes["loadingScene"]);
-  game.app.ticker.add(loadingLoop);
+  Game.gameScenes["waitingScene"].addChild(duelText);
+  Game.app.stage.addChild(Game.gameScenes["waitingScene"]);
+  Game.app.ticker.add(loadingLoop);
   function loadingLoop() {
-    game.cycle += 60 / game.app.ticker.FPS;
-    if (game.currentScene == "loadingScene") {
-      if (game.server!.readyState == 1) {
-        game.server!.send(JSON.stringify({ key: 0 }));
+    Game.cycle += 60 / Game.app.ticker.FPS;
+    if (Game.currentScene == "waitingScene") {
+      if (Game.game.server!.readyState == 1) {
+        Game.game.server!.send(JSON.stringify({ key: 0 }));
       }
       let comma = "";
-      for (var i = 0; i < (game.cycle / 40) % 4; i++) {
+      for (var i = 0; i < (Game.cycle / 40) % 4; i++) {
         comma += ".";
       }
       duelText.text = "プレイヤーを待機中" + comma;
-    } else game.app.ticker.remove(loadingLoop);
+    } else Game.app.ticker.remove(loadingLoop);
   }
 }
 
-export function changeScene(nextScene: string) {
-  game.currentScene = nextScene;
-  Object.keys(game.gameScenes).forEach((scene) => {
-    if (scene === nextScene) game.gameScenes[scene].visible = true;
-    else game.gameScenes[scene].visible = false;
-  });
-}
+export function setLoadingScene() {
+  Game.gameScenes["loadingScene"] = new PIXI.Container();
+  const loadingText = makeArialText("Now loading");
+  loadingText.position.set(250 - loadingText.width / 2, 230);
+  Game.gameScenes["loadingScene"].addChild(loadingText);
+  Game.app.stage.addChild(Game.gameScenes["loadingScene"]);
+  Game.app.ticker.add(loadingLoop);
 
-class Point {
-  constructor(public x: number, public y: number) {}
-}
-export function collisionMap(x: number, y: number, map: number[][]) {
-  x = Math.ceil(x);
-  y = Math.ceil(y);
-  let startX = Math.max(Math.floor(x / 30.0), 0) | 0;
-  let startY = Math.max(Math.floor(y / 30.0), 0) | 0;
-  let endX = Math.min(Math.floor((x + 30.0 - 1.0) / 30.0), map[0].length) | 0;
-  let endY = Math.min(Math.floor((y + 30.0 - 1.0) / 30.0), map.length) | 0;
-  for (let i = startY; i <= endY; i++) {
-    for (let j = startX; j <= endX; j++) {
-      if (map[i][j] == 1) {
-        return new Point(j, i);
+  function loadingLoop() {
+    Game.cycle += 60 / Game.app.ticker.FPS;
+    if (Game.currentScene == "loadingScene") {
+      let comma = "";
+      for (var i = 0; i < (Game.cycle / 40) % 4; i++) {
+        comma += ".";
       }
-    }
+      loadingText.text = "Now loading" + comma;
+    } else Game.app.ticker.remove(loadingLoop);
   }
-  return null;
 }
 
 export function setEndScene(winlose: number) {
-  game.gameScenes["endScene"] = new PIXI.Container();
+  Game.gameScenes["endScene"] = new PIXI.Container();
   const duelText = new PIXI.Text(winlose == 0 ? "Win!!" : "Lose...", {
     fontFamily: "Arial",
     fontSize: 50,
     fill: winlose == 0 ? 0xff0000 : 0x000ff,
   });
-  const startText = new PIXI.Text("もう一回", {
-    fontFamily: "Arial",
-    fontSize: 30,
-    fill: 0xffffff,
-  });
+  const startText = makeArialText("もう一回");
   duelText.position.set(250 - duelText.width / 2, 250);
   startText.position.set(
     250 - startText.width / 2,
@@ -181,7 +148,7 @@ export function setEndScene(winlose: number) {
     button.drawRect(250 - 150 / 2, 300, 150, 50);
   });
   button.on("pointerup", (e) => {
-    game.app = new PIXI.Application({
+    Game.app = new PIXI.Application({
       width: 500,
       height: 550,
       antialias: true,
@@ -189,12 +156,12 @@ export function setEndScene(winlose: number) {
     setUp();
     Item.ItemContainer = new PIXI.Container();
     Bullet.BulletContainer = new PIXI.Container();
-    setLoadinScene();
-    changeScene("loadingScene");
-    game.connectServer();
+    setWaitingScene();
+    Game.changeScene("waitingScene");
+    Game.game.connectServer();
   });
   button.addChild(startText);
-  game.gameScenes["endScene"].addChild(duelText);
-  game.gameScenes["endScene"].addChild(button);
-  game.app.stage.addChild(game.gameScenes["endScene"]);
+  Game.gameScenes["endScene"].addChild(duelText);
+  Game.gameScenes["endScene"].addChild(button);
+  Game.app.stage.addChild(Game.gameScenes["endScene"]);
 }
