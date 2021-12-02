@@ -179,10 +179,10 @@ export class Game {
     this.globalMap.forEach((e, i) => {
       e.forEach((b, j) => {
         if (b === 1) {
-          let obj = new PIXI.Graphics();
-          obj.beginFill(0x808080);
-          obj.drawRect(j * 30 + this.offsetX, i * 30 + this.offsetY, 30, 30);
-          obj.endFill();
+          let obj = new PIXI.Graphics()
+            .beginFill(0x808080)
+            .drawRect(j * 30 + this.offsetX, i * 30 + this.offsetY, 30, 30)
+            .endFill();
           mapContainer.addChild(obj);
           pol.push([
             [j * 30, i * 30],
@@ -215,16 +215,16 @@ export class Game {
     });
     if (Game.setting.setting["show_fps"]) gameCanvas.addChild(FPS);
 
-    let UIback = new PIXI.Graphics();
-    UIback.beginFill(0);
-    UIback.drawRect(0, 500, 500, 50);
-    UIback.endFill();
+    let UIback = new PIXI.Graphics()
+      .beginFill(0)
+      .drawRect(0, 500, 500, 50)
+      .endFill();
     UICanvas.addChild(UIback);
 
-    let UILine = new PIXI.Graphics();
-    UILine.lineStyle(2, 0xffffff);
-    UILine.moveTo(0, 500);
-    UILine.lineTo(500, 500);
+    let UILine = new PIXI.Graphics()
+      .lineStyle(2, 0xffffff)
+      .moveTo(0, 500)
+      .lineTo(500, 500);
     UICanvas.addChild(UILine);
 
     const HPtext = new PIXI.Text("HP", {
@@ -235,10 +235,10 @@ export class Game {
     HPtext.position.set(50, 520 - HPtext.height);
     UICanvas.addChild(HPtext);
 
-    let HPback = new PIXI.Graphics();
-    HPback.beginFill(0xff0000);
-    HPback.drawRect(50, 520, 100, 20);
-    HPback.endFill();
+    let HPback = new PIXI.Graphics()
+      .beginFill(0xff0000)
+      .drawRect(50, 520, 100, 20)
+      .endFill();
     UICanvas.addChild(HPback);
     UICanvas.addChild(this.player.HPbar);
 
@@ -263,9 +263,9 @@ export class Game {
     bulletMaxText.position.set(210, 525);
     UICanvas.addChild(bulletMaxText);
 
-    const itemStroke = new PIXI.Graphics();
-    itemStroke.lineStyle(1, 0xffffff);
-    itemStroke.drawRect(370, 520, 20, 20);
+    const itemStroke = new PIXI.Graphics()
+      .lineStyle(1, 0xffffff)
+      .drawRect(370, 520, 20, 20);
     UICanvas.addChild(itemStroke);
 
     const itemText = new PIXI.Text("Item", {
@@ -276,10 +276,10 @@ export class Game {
     itemText.position.set(370, 520 - itemText.height);
     UICanvas.addChild(itemText);
 
-    const effectLine = new PIXI.Graphics();
-    effectLine.lineStyle(2, 0x0000ff);
-    effectLine.moveTo(0, 500);
-    effectLine.lineTo(500, 500);
+    const effectLine = new PIXI.Graphics()
+      .lineStyle(2, 0x0000ff)
+      .moveTo(0, 500)
+      .lineTo(500, 500);
     UICanvas.addChild(effectLine);
     gameCanvas.addChild(UICanvas);
 

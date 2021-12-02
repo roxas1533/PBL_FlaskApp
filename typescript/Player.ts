@@ -211,15 +211,15 @@ export class Player extends GameObject {
 
   makeDisPlayeffect(): PIXI.Sprite {
     let cont = new PIXI.Container();
-    let temp = new PIXI.Graphics();
-    temp.beginFill(0xffffff);
-    temp.drawRect(0, 0, 500, 500);
-    temp.endFill();
+    let temp = new PIXI.Graphics()
+      .beginFill(0xffffff)
+      .drawRect(0, 0, 500, 500)
+      .endFill();
     cont.addChild(temp);
-    let temp2 = new PIXI.Graphics();
-    temp2.beginFill(0);
-    temp2.drawRect(0, 0, 400, 400);
-    temp2.endFill();
+    let temp2 = new PIXI.Graphics()
+      .beginFill(0)
+      .drawRect(0, 0, 400, 400)
+      .endFill();
     temp2.position.set(50, 50);
     cont.addChild(temp2);
     cont.filters = [

@@ -28,10 +28,10 @@ export class PointObject extends RenderObject {
       this.y + 5
     );
 
-    this.fill = new PIXI.Graphics();
-    this.fill.beginFill(0xffffff);
-    this.fill.drawRect(x, y, this.width, this.height);
-    this.fill.endFill();
+    this.fill = new PIXI.Graphics()
+      .beginFill(0xffffff)
+      .drawRect(x, y, this.width, this.height)
+      .endFill();
     this.m = 0;
     this.vx = vx;
     this.pointContainer = new PIXI.Container();

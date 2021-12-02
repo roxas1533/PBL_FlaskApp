@@ -45,30 +45,33 @@ export function setTitleScene() {
     250 - startText.width / 2,
     300 + 25 - startText.height / 2
   );
-  const button = new PIXI.Graphics();
-  button.lineStyle(1, 0xffffff);
-  button.drawRect(250 - 150 / 2, 300, 150, 50);
+  const button = new PIXI.Graphics()
+    .lineStyle(1, 0xffffff)
+    .drawRect(250 - 150 / 2, 300, 150, 50);
   button.hitArea = new PIXI.Rectangle(250 - 150 / 2, 300, 150, 50);
   button.interactive = true;
   button.buttonMode = true;
-  button.on("mouseover", (e) => {
-    button.clear();
-    button.lineStyle(1, 0xffffff);
-    button.beginFill(0x444444);
-    button.drawRect(250 - 150 / 2, 300, 150, 50);
-    button.endFill();
-  });
-  button.on("mouseout", (e) => {
-    button.clear();
-    button.lineStyle(1, 0xffffff);
-    button.drawRect(250 - 150 / 2, 300, 150, 50);
-  });
-  button.on("pointerup", (e) => {
-    setWaitingScene();
-    Game.changeScene("waitingScene");
-    Game.game.connectServer();
-  });
-  button.addChild(startText);
+  button
+    .on("mouseover", (e) => {
+      button
+        .clear()
+        .lineStyle(1, 0xffffff)
+        .beginFill(0x444444)
+        .drawRect(250 - 150 / 2, 300, 150, 50)
+        .endFill();
+    })
+    .on("mouseout", (e) => {
+      button
+        .clear()
+        .lineStyle(1, 0xffffff)
+        .drawRect(250 - 150 / 2, 300, 150, 50);
+    })
+    .on("pointerup", (e) => {
+      setWaitingScene();
+      Game.changeScene("waitingScene");
+      Game.game.connectServer();
+    })
+    .addChild(startText);
   Game.gameScenes["titleScene"].addChild(duelText);
   Game.gameScenes["titleScene"].addChild(button);
   Game.app.stage.addChild(Game.gameScenes["titleScene"]);
@@ -100,7 +103,18 @@ export function setLoadingScene() {
   Game.gameScenes["loadingScene"] = new PIXI.Container();
   const loadingText = makeArialText("Now loading");
   loadingText.position.set(250 - loadingText.width / 2, 230);
+  const waku = new PIXI.Graphics()
+    .lineStyle(1, 0xffffff)
+    .drawRect(250 - 200, 270, 400, 30);
+  const progressBar = new PIXI.Graphics()
+    .beginFill(0xffffff)
+    .drawRect(250 - 200, 270, 400, 30)
+    .endFill();
+  progressBar.width = 0;
   Game.gameScenes["loadingScene"].addChild(loadingText);
+  Game.gameScenes["loadingScene"].addChild(progressBar);
+  Game.gameScenes["loadingScene"].addChild(waku);
+
   Game.app.stage.addChild(Game.gameScenes["loadingScene"]);
   Game.app.ticker.add(loadingLoop);
 
@@ -113,6 +127,7 @@ export function setLoadingScene() {
       }
       loadingText.text = "Now loading" + comma;
     } else Game.app.ticker.remove(loadingLoop);
+    progressBar.width = (Game.loader.progress / 100) * 400;
   }
 }
 
@@ -129,38 +144,41 @@ export function setEndScene(winlose: number) {
     250 - startText.width / 2,
     300 + 25 - startText.height / 2
   );
-  const button = new PIXI.Graphics();
-  button.lineStyle(1, 0xffffff);
-  button.drawRect(250 - 150 / 2, 300, 150, 50);
+  const button = new PIXI.Graphics()
+    .lineStyle(1, 0xffffff)
+    .drawRect(250 - 150 / 2, 300, 150, 50);
   button.hitArea = new PIXI.Rectangle(250 - 150 / 2, 300, 150, 50);
   button.interactive = true;
   button.buttonMode = true;
-  button.on("mouseover", (e) => {
-    button.clear();
-    button.lineStyle(1, 0xffffff);
-    button.beginFill(0x444444);
-    button.drawRect(250 - 150 / 2, 300, 150, 50);
-    button.endFill();
-  });
-  button.on("mouseout", (e) => {
-    button.clear();
-    button.lineStyle(1, 0xffffff);
-    button.drawRect(250 - 150 / 2, 300, 150, 50);
-  });
-  button.on("pointerup", (e) => {
-    Game.app = new PIXI.Application({
-      width: 500,
-      height: 550,
-      antialias: true,
-    });
-    setUp();
-    Item.ItemContainer = new PIXI.Container();
-    Bullet.BulletContainer = new PIXI.Container();
-    setWaitingScene();
-    Game.changeScene("waitingScene");
-    Game.game.connectServer();
-  });
-  button.addChild(startText);
+  button
+    .on("mouseover", (e) => {
+      button
+        .clear()
+        .lineStyle(1, 0xffffff)
+        .beginFill(0x444444)
+        .drawRect(250 - 150 / 2, 300, 150, 50)
+        .endFill();
+    })
+    .on("mouseout", (e) => {
+      button
+        .clear()
+        .lineStyle(1, 0xffffff)
+        .drawRect(250 - 150 / 2, 300, 150, 50);
+    })
+    .on("pointerup", (e) => {
+      Game.app = new PIXI.Application({
+        width: 500,
+        height: 550,
+        antialias: true,
+      });
+      setUp();
+      Item.ItemContainer = new PIXI.Container();
+      Bullet.BulletContainer = new PIXI.Container();
+      setWaitingScene();
+      Game.changeScene("waitingScene");
+      Game.game.connectServer();
+    })
+    .addChild(startText);
   Game.gameScenes["endScene"].addChild(duelText);
   Game.gameScenes["endScene"].addChild(button);
   Game.app.stage.addChild(Game.gameScenes["endScene"]);
