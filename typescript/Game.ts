@@ -21,11 +21,7 @@ export class Game {
   static gameScenes: { [key: string]: PIXI.Container } = {};
   static cycle: number = 0;
 
-  static app = new PIXI.Application({
-    width: 500,
-    height: 550,
-    antialias: true,
-  });
+  static app: PIXI.Application;
   public chargeGage: PIXI.Graphics;
   public player: Player;
   public ePlayer: Player;

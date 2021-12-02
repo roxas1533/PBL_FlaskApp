@@ -62,13 +62,18 @@ window.addEventListener("load", () => {
   });
   loadSkinList(() => {
     setUp(false);
-    // setLoadingScene();
-    // Game.changeScene("loadingScene");
+    setLoadingScene();
+    Game.changeScene("loadingScene");
     Game.loader.load();
   });
 });
 
 window.addEventListener("DOMContentLoaded", () => {
+  Game.app = new PIXI.Application({
+    width: 500,
+    height: 550,
+    antialias: true,
+  });
   const loadingDOM = document.getElementById("loading")!;
   loadProfile();
   fetch("http://" + window.location.host + "/setting", {
