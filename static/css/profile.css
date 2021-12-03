@@ -1,0 +1,114 @@
+.user-select {
+  margin-left: 10px;
+}
+.balloon {
+  display: none;
+  padding: 5px 4px;
+  min-width: 60px;
+  max-width: 100%;
+  color: #fff;
+  font-size: 2px;
+  background: #65ceee;
+  border-radius: 4px;
+  top: -34px;
+}
+.skin:hover .balloon {
+  display: inline-block;
+}
+.balloon:before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  /* left: 50%; */
+  margin-left: 0px;
+  border: 7px solid transparent;
+  border-top: 7px solid #65ceee;
+}
+
+.balloon p {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+.profileClass {
+  z-index: 100;
+  width: 100vw;
+  height: 100%;
+}
+
+.profileWrapper {
+  width: 50%;
+  height: 60%;
+  min-width: 375px;
+  min-height: 550px;
+  background-color: #101010;
+  border: 2px solid #59a6ff;
+  border-radius: 3%;
+  color: #888888;
+  flex-direction: column;
+}
+
+#ProfileName {
+  margin-left: 20px;
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  color: #fff;
+}
+#rato {
+  width: 100%;
+  height: 10%;
+}
+
+.waku {
+  border-right: 1px solid #888888;
+  width: 20%;
+  height: 100%;
+}
+.score {
+  justify-content: center;
+  align-items: center;
+}
+
+.skinWrap,
+.skins {
+  display: inline-flex;
+  justify-content: center;
+  /* align-items: center; */
+  width: 100%;
+  height: 50%;
+}
+.skins {
+  width: 95%;
+  height: 100%;
+  display: grid;
+  grid-auto-rows: 100px;
+  grid-template-columns: repeat(auto-fill, 100px);
+  grid-gap: 1% 1%;
+}
+.skin {
+  border: 1px solid #888888;
+  margin: 10px;
+  position: relative;
+}
+.skin:hover {
+  outline: 3px solid #6cdfee;
+}
+
+.nowSkin {
+  outline: 3px solid #46f76c;
+}
+
+.body {
+  width: 40%;
+  height: 40%;
+  transform: translate(-50%, -50%);
+  top: 60%;
+  left: 50%;
+}
+.firearm {
+  width: 10%;
+  height: 40%;
+  transform: translate(-50%, -50%);
+  top: 40%;
+  left: 50%;
+}

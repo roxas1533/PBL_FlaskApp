@@ -1,41 +1,45 @@
-<div class=profileClass onclick="deleteProfile()" id=Profile>
-    <div class="overray">
-        <div class="profileWrapper" onclick="event.cancelBubble=true">
-            <div id="close">
-                <div class=wrapFas >
-                    <div class=wrapFas2 onclick="deleteProfile()">
-                        <i class="fas fa-times"></i>
-                    </div>
-                </div>
-            </div>
-            <div id="ProfileName">
-                {{username}}
-            </div>
-            <div id="rato">
-                <div class="waku">
-                    勝率
-                    <div class="point">{{win_rato}}%</div>
-                </div>
-                <div class="waku">
-                    勝ち
-                    <div class="point">{{win}}</div>
-                </div>
-                <div class="waku">
-                    負け
-                    <div class="point">{{lose}}</div>
-                </div>
-                <div class="waku">
-                    連勝
-                    <div class="point">{{cv}}</div>
-                </div>
-            </div>
+<div class="pos-absolute profileClass" onclick="deleteProfile()" id="Profile">
+  <div class="d-flex overray">
+    <div class="d-flex profileWrapper" onclick="event.cancelBubble=true">
+      <div class="d-flex close" id="close">
+        <div class="wrapFas">
+          <div class="d-flex wrapFas2" onclick="deleteProfile()">
+            <i class="fas fa-times"></i>
+          </div>
+        </div>
+      </div>
+      <div id="ProfileName">{{username}}</div>
+      <div class="profile-detail" style="display: block; height: 100%">
+        <div id="rato">
+          <div class="waku">
+            勝率
+            <div class="d-flex score">{{win_rato}}%</div>
+          </div>
+          <div class="waku">
+            勝ち
+            <div class="d-flex score">{{win}}</div>
+          </div>
+          <div class="waku">
+            負け
+            <div class="d-flex score">{{lose}}</div>
+          </div>
+          <div class="waku">
+            連勝
+            <div class="d-flex score">{{cv}}</div>
+          </div>
+        </div>
+        <div class="user-select" style="display: block">
+          <div class="d-flex flex-flow-col color-select">
             <p>カラー</p>
             <div class="skinWrap">
-                <div class="skins" id="skins">
-                </div>
+              <div class="skins" id="skins"></div>
             </div>
-          
-
+          </div>
+          <div class="d-flex flex-flow-col point-exchange">
+            <p>景品交換</p>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </div>

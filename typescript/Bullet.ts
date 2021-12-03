@@ -64,10 +64,12 @@ export class Bullet extends GameObject {
     });
   }
   onStage() {
-    this.bullet.beginFill(0xff0000);
-    this.bullet.drawRect(0, 0, this.width, this.height);
-    this.bullet.position.set(this.x, this.y);
-    this.bullet.endFill();
+    this.bullet
+      .beginFill(0xff0000)
+      .drawCircle(0, 0, this.width / 2)
+      .endFill();
+
+    this.bullet.position.set(this.x + this.width / 2, this.y);
     Bullet.BulletContainer.addChild(this.bullet);
     return this;
   }

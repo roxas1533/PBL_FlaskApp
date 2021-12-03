@@ -28,9 +28,12 @@ function openProfile() {
   Skin.skinlist.forEach((e, i) => {
     skin!.insertAdjacentHTML(
       "beforeend",
-      `<div data-number="${i}" class="skin" onclick="updateSkin(this)">
-    <div class="example firearm" style="background-color: ${e["firearm"]};"></div>
-    <div class="example body" style="background-color: ${e["body"]};"></div>
+      `<div data-number="${i}" class="pos-relative skin" onclick="updateSkin(this)">
+    <div class="pos-absolute firearm" style="background-color: ${e["firearm"]};"></div>
+    <div class="pos-absolute body" style="background-color: ${e["body"]};"></div>
+    <div class="pos-absolute balloon">
+      <p>${e["description"]}</p>
+    </div>
     </div>`
     );
   });
@@ -168,11 +171,11 @@ function changeKey(obj: HTMLDivElement) {
   const body = document.querySelector("html body");
   body!.insertAdjacentHTML(
     "afterend",
-    `<div class="overray" tabindex="0" id=keyoverray onclick="this.remove()" style="flex-direction: column;z-index:101">
+    `<div class="d-flex overray" tabindex="0" id=keyoverray onclick="this.remove()" style="flex-direction: column;z-index:101">
   <h1 style="color:white;">割り当てるキーを入力してください。</h1>
   <div class="spinner-box">
-  <div class="configure-border-1"></div>  
-  <div class="configure-border-2"></div>
+  <div class="pos-absolute d-flex configure-border-1"></div>  
+  <div class="d-flex configure-border-2"></div>
 </div>
     </div>`
   );

@@ -16,13 +16,19 @@ class SkinList:
         self.readSkin()
 
     def readSkin(self):
-        with open("skinlist.csv") as f:
+        with open("csv/skinlist.csv") as f:
             for i, s_line in enumerate(f):
                 if i == 0:
                     continue
                 s_line = s_line.rstrip(os.linesep)
                 skinData = s_line.split(",")
-                self.__skinList.append({"body": skinData[0], "firearm": skinData[1]})
+                self.__skinList.append(
+                    {
+                        "body": skinData[0],
+                        "firearm": skinData[1],
+                        "description": skinData[2],
+                    }
+                )
         self.__skinLength = len(self.__skinList)
 
     def getSkinList(self):

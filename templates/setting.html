@@ -1,46 +1,45 @@
-<div class=profileClass onclick="this.remove();" id=Profile>
-
-    <div class="overray">
-        <div class="profileWrapper" onclick="event.cancelBubble=true">
-            <div id="close">
-                <div class=wrapFas >
-                    <div class=wrapFas2 onclick="deleteProfile()">
-                        <i class="fas fa-times"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="settingname">
-                オプション/<div id="settingname"></div>
-            </div>
-            <div id=settinglist>
-                <div class=setting id=0 onclick="changesetting(this)">
-                    <i class="fas fa-cog"></i>
-                    ゲーム設定
-                </div>
-                <div class=setting id=1 onclick="changesetting(this)">
-                    <i class="fas fa-keyboard"></i>
-                    キー設定
-                </div>
-            </div>
-            <div id=settingcontent class=settingcontent>
-            </div>
-            <div class="okcancelarea">
-                <div class="button settingUserButton reset" onclick="resertDefault();">
-                    初期設定
-                    <div class="underbar"></div>
-                    <div class="underbar2"></div>
-                </div>
-                <div class="button settingUserButton ok" onclick="updateSetting()">
-                    確定
-                    <div class="underbar"></div>
-                    <div class="underbar2"></div>
-                </div>
-                <div class="button settingUserButton cancel" onclick="deleteProfile()">
-                    キャンセル
-                    <div class="underbar"></div>
-                    <div class="underbar2"></div>
-                </div>
-            </div>
+<div class="profileClass" onclick="this.remove();" id="Profile">
+  <div class="d-flex overray">
+    <div class="d-flex profileWrapper" onclick="event.cancelBubble=true">
+      <div class="d-flex close" id="close">
+        <div class="wrapFas">
+          <div class="d-flex wrapFas2" onclick="deleteProfile()">
+            <i class="fas fa-times"></i>
+          </div>
         </div>
+      </div>
+      <div class="settingname">
+        オプション/
+        <div id="settingname"></div>
+      </div>
+      <div class="d-flex" id="settinglist">
+        <div class="setting" id="0" onclick="changesetting(this)">
+          <i class="fas fa-cog"></i>
+          ゲーム設定
+        </div>
+        <div class="setting" id="1" onclick="changesetting(this)">
+          <i class="fas fa-keyboard"></i>
+          キー設定
+        </div>
+      </div>
+      <div id="settingcontent" class="d-flex settingcontent"></div>
+      <div class="d-flex okcancelarea">
+        <div class="button settingUserButton reset" onclick="resertDefault();">
+          初期設定
+          <div class="pos-absolute underbar"></div>
+          <div class="pos-absolute underbar2"></div>
+        </div>
+        <div class="button settingUserButton ok" onclick="updateSetting()">
+          確定
+          <div class="pos-absolute underbar"></div>
+          <div class="pos-absolute underbar2"></div>
+        </div>
+        <div class="button settingUserButton cancel" onclick="deleteProfile()">
+          キャンセル
+          <div class="pos-absolute underbar"></div>
+          <div class="pos-absolute underbar2"></div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
