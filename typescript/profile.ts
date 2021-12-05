@@ -1,8 +1,9 @@
 import { Game } from "./Game";
+import { Prize } from "./Prize";
+import { Setting } from "./Setting";
 import { Skin } from "./Skin";
 
 let profile: string;
-let nowSetting = 0;
 
 export async function loadProfile() {
   fetch("http://" + window.location.host + "/profile", {
@@ -20,7 +21,7 @@ export async function loadProfile() {
     });
 }
 
-function openProfile() {
+export function openProfile() {
   const body = document.querySelector("html body");
   body!.insertAdjacentHTML("afterbegin", profile);
   const skin = document.getElementById("skins");
@@ -28,7 +29,7 @@ function openProfile() {
   Skin.skinlist.forEach((e, i) => {
     skin!.insertAdjacentHTML(
       "beforeend",
-      `<div data-number="${i}" class="pos-relative skin" onclick="updateSkin(this)">
+      `<div data-number="${i}" class="pos-relative skin">
     <div class="pos-absolute firearm" style="background-color: ${e["firearm"]};"></div>
     <div class="pos-absolute body" style="background-color: ${e["body"]};"></div>
     <div class="pos-absolute balloon">
@@ -37,38 +38,71 @@ function openProfile() {
     </div>`
     );
   });
+  const skins = Array.from(document.getElementsByClassName("skin"));
+  skins.forEach((s) => {
+    s.addEventListener("click", (e) => {
+      Skin.updateSkin(<HTMLDivElement>s);
+    });
+  });
+  const settingDeleter = Array.from(
+    document.getElementsByClassName("deleteProfile")
+  );
+
+  settingDeleter.forEach((d) => {
+    d.addEventListener("click", deleteProfile);
+  });
 
   skin!.children[Skin.nowSkin].classList.add("nowSkin");
-}
-window.openProfile = openProfile;
-window.openSetting = openSetting;
-window.updateSkin = updateSkin;
-window.deleteProfile = deleteProfile;
-window.changesetting = changesetting;
-window.changeKey = changeKey;
-window.updateSetting = updateSetting;
-window.resertDefault = resertDefault;
-function openSetting() {
-  const body = document.querySelector("html body");
-  body!.insertAdjacentHTML("afterbegin", Game.setting.settingpage);
-  Game.setting.stackSetting();
-  changesetting(<HTMLDivElement>document.getElementById("0"));
+
+  const prizes = document.getElementById("prizes")!;
+
+  Prize.prizelist.forEach((e, i) => {
+    if (Prize.userOpend & Number(e["id"])) {
+      prizes.insertAdjacentHTML(
+        "beforeend",
+        `<div data-number="${i}" class="pos-relative prize">
+        <img src="static/img/prizeImage/${e["image_name"]}.png" class="prize-image">
+      <div class="pos-absolute balloon">
+        <p>${e["description"]}</p>
+      </div>
+      </div>`
+      );
+    } else {
+      prizes.insertAdjacentHTML(
+        "beforeend",
+        `<div data-number="${i}" class="pos-relative prize">
+        <img src="static/img/prizeImage/${e["image_name"]}.png" class="prize-image"/>
+        <div class="pos-absolute point-not-opened lock"/>
+        <img src="static/img/locked.png" class="pos-absolute locked-image lock" />
+      <div class="pos-absolute balloon lock">
+        <p>開放:${e["need_point"]}p</p>
+      </div>
+      </div>`
+      );
+      prizes.lastElementChild?.addEventListener("click", openPrize);
+    }
+  });
+  document
+    .getElementById("confirmOpenPrize")
+    ?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      (<HTMLDivElement>e.currentTarget!).classList.remove("d-flex");
+      (<HTMLDivElement>e.currentTarget!).classList.add("d-none");
+    });
+  document.getElementById("havePoint")!.innerHTML = Prize.userPoint.toString();
 }
 
-function updateSkin(dom: HTMLDivElement) {
-  const target = dom;
-  target.classList.add("nowSkin");
-  let previous = target.previousElementSibling;
-  while (previous != null) {
-    previous.classList.remove("nowSkin");
-    previous = previous.previousElementSibling;
-  }
-  let next = target.nextElementSibling;
-  while (next != null) {
-    next.classList.remove("nowSkin");
-    next = next.nextElementSibling;
-  }
-  Skin.changeSkin = Number(target.dataset.number);
+function openPrize(e: Event) {
+  const num = Number(
+    (<HTMLDivElement>e.currentTarget!).getAttribute("data-number")
+  );
+  document.getElementById("prizeName")!.innerHTML =
+    Prize.prizelist[num]["description"];
+  document.getElementById("need_point")!.innerHTML =
+    Prize.prizelist[num]["need_point"];
+  const confirmOpenPrize = document.getElementById("confirmOpenPrize")!;
+  confirmOpenPrize.classList.add("d-flex");
+  confirmOpenPrize.classList.remove("d-none");
 }
 
 function deleteProfile() {
@@ -86,122 +120,4 @@ function deleteProfile() {
   }
   const profile = document.getElementById("Profile");
   profile!.remove();
-}
-
-function changesetting(obj: HTMLDivElement) {
-  const profile = document.getElementById("settingWrapper");
-  const settingname = document.getElementById("settingname");
-  settingname!.innerHTML = obj.innerHTML;
-  if (profile ?? false) profile!.remove();
-  const settingcontent = document.getElementById("settingcontent");
-  switch (obj.id) {
-    case "0":
-      settingcontent!.insertAdjacentHTML(
-        "afterbegin",
-        Game.setting.gamesetting
-      );
-      const show_damage: HTMLInputElement = <HTMLInputElement>(
-        document.getElementById("showDamage")
-      );
-      show_damage!.checked = Game.setting.tempSetting["show_damage"];
-      show_damage.addEventListener("change", (e) => {
-        Game.setting.tempSetting["show_damage"] = +show_damage.checked;
-      });
-      const showFps: HTMLInputElement = <HTMLInputElement>(
-        document.getElementById("showFps")
-      );
-      showFps.checked = Game.setting.tempSetting["show_fps"];
-      showFps.addEventListener("change", (e) => {
-        Game.setting.tempSetting["show_fps"] = +showFps.checked;
-      });
-      //   num = document.getElementById("num");
-      //   num.innerText = viewnum.value;
-      //   viewnum.addEventListener("input", (e) => {
-      //     num.innerText = e.target.value;
-      //     Game.setting.tempSetting["view_num"] = e.target.value;
-      //   });
-      break;
-    case "1":
-      settingcontent!.insertAdjacentHTML("afterbegin", Game.setting.keysetting);
-      let keys = document.getElementsByClassName("key");
-      Array.prototype.forEach.call(keys, (e) => {
-        e.innerHTML = Game.setting.tempSetting[e.id];
-      });
-      break;
-  }
-  obj.style.color = "white";
-  obj.style.border = "solid 2px #59a6ff";
-  obj.style.background = "#2c2c2c";
-  nowSetting = Number(obj.id);
-
-  const settinglist: HTMLDivElement = <HTMLDivElement>(
-    document.getElementById("settinglist")
-  );
-  const settinglists = settinglist!.childNodes;
-
-  settinglists.forEach((e) => {
-    if (e.nodeName != "#text") {
-      const ele = <HTMLDivElement>e;
-      if (nowSetting != Number(ele.id)) {
-        ele.style.color = "#888888";
-        ele.style.border = "solid 1px #888888";
-        ele.style.background = "none";
-        ele.addEventListener(
-          "mouseenter",
-          () => {
-            ele.style.background = "#2c2c2c";
-          },
-          false
-        );
-        ele.addEventListener(
-          "mouseleave",
-          () => {
-            ele.style.background = "none";
-          },
-          false
-        );
-      }
-    }
-    // console.log(e.id);
-  });
-  // console.log(obj.id);
-}
-
-function changeKey(obj: HTMLDivElement) {
-  const body = document.querySelector("html body");
-  body!.insertAdjacentHTML(
-    "afterend",
-    `<div class="d-flex overray" tabindex="0" id=keyoverray onclick="this.remove()" style="flex-direction: column;z-index:101">
-  <h1 style="color:white;">割り当てるキーを入力してください。</h1>
-  <div class="spinner-box">
-  <div class="pos-absolute d-flex configure-border-1"></div>  
-  <div class="d-flex configure-border-2"></div>
-</div>
-    </div>`
-  );
-  const keyoverray = document.getElementById("keyoverray")!;
-  keyoverray.focus();
-  keyoverray.addEventListener("keyup", (e) => {
-    obj.innerHTML = `${e.key == " " ? "SPACE" : e.key}`.toUpperCase();
-    Game.setting.tempSetting[obj.id] = obj.innerHTML;
-    keyoverray.remove();
-  });
-}
-
-function updateSetting() {
-  Game.setting.updateSetting();
-  fetch("http://" + window.location.host + "/updateSetting", {
-    method: "POST",
-    body: JSON.stringify(Game.setting.setting),
-  }).then((response) => {
-    if (!response.ok) {
-      return Promise.reject(new Error("エラーです"));
-    }
-  });
-  deleteProfile();
-}
-
-function resertDefault() {
-  Game.setting.setDef();
-  changesetting(<HTMLDivElement>document.getElementById("0"));
 }

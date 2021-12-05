@@ -5,6 +5,7 @@ import { Item } from "./Item";
 import { Skin } from "./Skin";
 import { Bullet } from "./Bullet";
 import { Game } from "./Game";
+import { Prize } from "./Prize";
 export const BT = [1, 3, 3, 10, 10, 5, 1, 10];
 
 export function loadSkinList(callback: () => void) {
@@ -23,6 +24,27 @@ export function loadSkinList(callback: () => void) {
       Skin.skinlist = list["list"];
       Skin.nowSkin = list["skin"];
       Skin.changeSkin = Skin.nowSkin;
+      callback();
+    });
+}
+export function loadPrizeList(callback: () => void) {
+  fetch("http://" + window.location.host + "/getPrizeList", {
+    method: "POST",
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        return Promise.reject(new Error("エラーです"));
+      }
+    })
+    .then((res) => {
+      const list = JSON.parse(res) as { [key: string]: any };
+      Prize.prizelist = list["prize_list"];
+      Prize.prizeName = list["name_list"];
+      Prize.userOpend = list["prize_opend"];
+      Prize.userPoint = list["point"];
+      // Skin.changeSkin = Skin.nowSkin;
       callback();
     });
 }

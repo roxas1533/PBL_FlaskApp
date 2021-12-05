@@ -1,16 +1,16 @@
-<div class="pos-absolute profileClass" onclick="deleteProfile()" id="Profile">
+<div class="pos-absolute profileClass deleteProfile" id="Profile">
   <div class="d-flex overray">
     <div class="d-flex profileWrapper" onclick="event.cancelBubble=true">
       <div class="d-flex close" id="close">
         <div class="wrapFas">
-          <div class="d-flex wrapFas2" onclick="deleteProfile()">
+          <div class="d-flex wrapFas2 deleteProfile">
             <i class="fas fa-times"></i>
           </div>
         </div>
       </div>
       <div id="ProfileName">{{username}}</div>
-      <div class="profile-detail" style="display: block; height: 100%">
-        <div id="rato">
+      <div class="d-flex flex-flow-col profile-detail">
+        <div class="rato">
           <div class="waku">
             勝率
             <div class="d-flex score">{{win_rato}}%</div>
@@ -30,16 +30,36 @@
         </div>
         <div class="user-select" style="display: block">
           <div class="d-flex flex-flow-col color-select">
-            <p>カラー</p>
-            <div class="skinWrap">
-              <div class="skins" id="skins"></div>
-            </div>
+            <p class="f-bold">カラー</p>
+            <div class="skins" id="skins"></div>
           </div>
           <div class="d-flex flex-flow-col point-exchange">
-            <p>景品交換</p>
+            <p class="f-bold">景品交換 (所持ポイント：{{point}})</p>
+            <div class="prizes" id="prizes"></div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+  <div class="d-flex overray" id="confirmOpenPrize">
+    <div class="d-flex flex-flow-col confirm">
+      <div class="d-flex close prize-close">
+        <span class="have-point">
+          所持:<span id="havePoint">999</span>ポイント
+        </span>
+        <div class="wrapFas">
+          <div class="d-flex wrapFas2">
+            <i class="fas fa-times"></i>
+          </div>
+        </div>
+      </div>
+      <div class="confirm-text">
+        <p class="confirm-text">
+          「<span id="prizeName"></span>」を開放しますか？
+        </p>
+        <p class="confirm-text">消費:<span id="need_point"></span>ポイント</p>
+      </div>
+      <div class="confirm-interface"></div>
     </div>
   </div>
 </div>

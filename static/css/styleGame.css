@@ -170,9 +170,6 @@ div {
   display: inline-block;
   text-align: left;
 }
-span {
-  display: block;
-}
 
 .component {
   width: 100vw;

@@ -2,6 +2,9 @@ import { GameObject } from "./RenderObject";
 import * as PIXI from "pixi.js";
 import { collisionMapBullet, collisionObject } from "./utils";
 import { Game } from "./Game";
+import { GlowFilter } from "@pixi/filter-glow";
+import { Player } from "./Player";
+import { DEG_TO_RAD } from "pixi.js";
 
 export class Bullet extends GameObject {
   static pushedBulletID: number[] = [];
@@ -39,6 +42,7 @@ export class Bullet extends GameObject {
     //   (e - s) * (1 - Math.pow(1 - 0.1, 60 * t)) + s;
     this.x += this.vx * delta;
     this.y += this.vy * delta;
+
     this.history.push([Date.now(), this.x, this.y]);
     if (this.history.length >= 50) {
       this.history.shift();
@@ -64,12 +68,37 @@ export class Bullet extends GameObject {
     });
   }
   onStage() {
+    this.width = 100;
+
     this.bullet
       .beginFill(0xff0000)
       .drawCircle(0, 0, this.width / 2)
       .endFill();
+    // this.bullet
+    //   .beginFill(0xff0000)
+    //   .drawRect(0, 0, this.width, this.width)
+    //   .endFill();
+    // let player: Player;
+    // if (this.ID == Game.game.player.id) player = Game.game.player;
+    // else player = Game.game.ePlayer;
+    // this.bullet
+    //   .beginFill(0xff0000)
+    //   .moveTo(0, 0)
+    //   .lineTo(
+    //     this.width * Math.cos(player.R + (90 + 30) * DEG_TO_RAD),
+    //     this.width * Math.sin(player.R + (90 + 30) * DEG_TO_RAD)
+    //   )
+    //   .lineTo(
+    //     this.width * Math.cos(player.R + (90 - 30) * DEG_TO_RAD),
+    //     this.width * Math.sin(player.R + (90 - 30) * DEG_TO_RAD)
+    //   )
+    //   .endFill();
 
-    this.bullet.position.set(this.x + this.width / 2, this.y);
+    // this.bullet.position.set(this.x - this.width / 2 + 1000, this.y);
+    // this.bullet.filters = [
+    //   new GlowFilter({ distance: 15, outerStrength: 6, quality: 0.7 }),
+    //   new PIXI.filters.BlurFilter(3),
+    // ];
     Bullet.BulletContainer.addChild(this.bullet);
     return this;
   }

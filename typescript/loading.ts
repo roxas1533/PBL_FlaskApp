@@ -1,7 +1,8 @@
 import * as PIXI from "pixi.js";
-import { loadProfile } from "./profile";
+import { loadProfile, openProfile } from "./profile";
 import { Setting } from "./Setting";
 import {
+  loadPrizeList,
   loadSkinList,
   setLoadingScene,
   setTitleScene,
@@ -58,10 +59,12 @@ window.addEventListener("load", () => {
     Game.changeScene("titleScene");
   });
   loadSkinList(() => {
-    setUp(false);
-    setLoadingScene();
-    Game.changeScene("loadingScene");
-    Game.loader.load();
+    loadPrizeList(() => {
+      setUp(false);
+      setLoadingScene();
+      Game.changeScene("loadingScene");
+      Game.loader.load();
+    });
   });
 });
 
@@ -72,7 +75,15 @@ window.addEventListener("DOMContentLoaded", () => {
     antialias: true,
   });
   const loadingDOM = document.getElementById("loading")!;
+
+  const settingButton = document.getElementById("settingButton");
+  if (settingButton)
+    settingButton.addEventListener("click", Setting.openSetting);
+
   loadProfile();
+  const openProfileDom = document.getElementById("openProfile");
+  if (openProfileDom) openProfileDom.addEventListener("click", openProfile);
+
   fetch("http://" + window.location.host + "/setting", {
     method: "POST",
   })

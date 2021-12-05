@@ -4,41 +4,30 @@ from flask import (
 )
 import os
 import json
+from python_object.PrizeList import PrizeList
+import pymysql.cursors
+
+from python_object.SkinList import SkinList
 
 secret_key = '_5#y2L"F43A8\n\0Sek;:"!\@'
 
 
-class SkinList:
-    def __init__(self) -> None:
-        self.readSkin
-        self.__skinList = []
-        self.__skinLength = 0
-        self.readSkin()
-
-    def readSkin(self):
-        with open("csv/skinlist.csv") as f:
-            for i, s_line in enumerate(f):
-                if i == 0:
-                    continue
-                s_line = s_line.rstrip(os.linesep)
-                skinData = s_line.split(",")
-                self.__skinList.append(
-                    {
-                        "body": skinData[0],
-                        "firearm": skinData[1],
-                        "description": skinData[2],
-                    }
-                )
-        self.__skinLength = len(self.__skinList)
-
-    def getSkinList(self):
-        return self.__skinList
-
-    def __len__(self):
-        return self.__skinLength
+def connectSQL():
+    return pymysql.connect(
+        host="127.0.0.1",
+        # host="pbl_sqldb_1",
+        # unix_socket="/var/run/mysqld/mysqld.sock",
+        port=3306,
+        user="root",
+        password="password",
+        db="sampleDB",
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor,
+    )
 
 
 skinlist = SkinList()
+prizelist = PrizeList(connectSQL())
 
 
 def setSkin(conn, session, skinid):
@@ -79,6 +68,13 @@ def getSkinList(conn, session):
     }
 
 
+def getPrizeList():
+    return {
+        "prize_list": prizelist.getPrizeList(),
+        "name_list": prizelist.getPrizeTypeNameList(),
+    }
+
+
 def getProfile(conn, session):
     return getProfileFromName(conn, session["username"])
 
@@ -110,17 +106,14 @@ def getProfileFromName(conn, name):
                 return {"result": False, "reason": "存在しないユーザー名"}
             if len(re) > 1:
                 raise Exception("複数一致")
-            win = re[0]["win"]
-            lose = re[0]["lose"]
+            re = re[0]
+            win = re["win"]
+            lose = re["lose"]
             win_rato = 0 if win == 0 else win / (win + lose) * 100
         return {
             "result": True,
-            "win": re[0]["win"],
-            "lose": re[0]["lose"],
             "win_rato": round(win_rato, 1),
-            "cv": re[0]["cv"],
-            "skin": re[0]["skin"],
-        }
+        } | re
     except Exception as e:
         e = str(e)
         print("getProfileFromNameエラー", e)

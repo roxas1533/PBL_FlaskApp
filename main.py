@@ -1,6 +1,8 @@
 from API import (
     SkinList,
+    connectSQL,
     getNameSession,
+    getPrizeList,
     getProfile,
     getProfileFromName,
     getSkinList,
@@ -30,7 +32,6 @@ import json
 import hashlib
 from flask_socketio import SocketIO, emit, join_room
 from engineio.payload import Payload
-import pymysql.cursors
 
 Payload.max_decode_packets = 50
 import logging
@@ -55,20 +56,6 @@ app = Flask(__name__)
 # app.secret_key = os.environ["SECRET"].encode()
 app.secret_key = secret_key
 from flask_cors import CORS
-
-
-def connectSQL():
-    return pymysql.connect(
-        host="127.0.0.1",
-        # host="pbl_sqldb_1",
-        # unix_socket="/var/run/mysqld/mysqld.sock",
-        port=3306,
-        user="root",
-        password="password",
-        db="sampleDB",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
 
 
 defaultSetting = None
@@ -159,6 +146,7 @@ def profile():
         lose=p["lose"],
         cv=p["cv"],
         win_rato=p["win_rato"],
+        point=p["point"],
     )
 
 
@@ -201,6 +189,39 @@ def setting():
             "defaultSetting": defaultSetting,
         }
     )
+
+
+@app.route("/getPrizeList", methods=["POST"])
+def GetPrizeList():
+    if "username" not in session:
+        return jsonify({"prize_lists": None, "open_prized": None})
+    conn = connectSQL()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "select opend_prize,point from user where name=%s", session["username"]
+        )
+        re = cursor.fetchall()
+        re = re[0]
+    l = getPrizeList()
+
+    return jsonify(l | re)
+
+
+@app.route("/openprize", methods=["POST"])
+def openPrize():
+    if "username" not in session:
+        return "", 401
+    print(request.data.decode("utf-8"))
+    conn = connectSQL()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "select opend_prize from user where name=%s", session["username"]
+        )
+        re = cursor.fetchall()
+        re = re[0]
+    l = getPrizeList()
+
+    return jsonify(l | {"open_prized": re})
 
 
 @app.route("/getSkinList", methods=["POST"])

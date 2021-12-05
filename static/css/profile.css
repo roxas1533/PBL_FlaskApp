@@ -1,5 +1,13 @@
+.f-bold {
+  font: bold;
+}
+.d-none {
+  display: none;
+}
+
 .user-select {
   margin-left: 10px;
+  overflow: auto;
 }
 .balloon {
   display: none;
@@ -11,15 +19,13 @@
   background: #65ceee;
   border-radius: 4px;
   top: -34px;
+  left: 0;
 }
-.skin:hover .balloon {
-  display: inline-block;
-}
+
 .balloon:before {
   content: "";
   position: absolute;
   top: 100%;
-  /* left: 50%; */
   margin-left: 0px;
   border: 7px solid transparent;
   border-top: 7px solid #65ceee;
@@ -30,6 +36,10 @@
   padding: 0;
   text-align: center;
 }
+.skin:hover .balloon,
+.prize:hover .balloon {
+  display: inline-block;
+}
 .profileClass {
   z-index: 100;
   width: 100vw;
@@ -37,15 +47,20 @@
 }
 
 .profileWrapper {
+  /* overflow: hidden; */
   width: 50%;
   height: 60%;
   min-width: 375px;
   min-height: 550px;
   background-color: #101010;
   border: 2px solid #59a6ff;
-  border-radius: 3%;
+  border-radius: 13px;
   color: #888888;
   flex-direction: column;
+}
+.profile-detail {
+  flex: 1;
+  overflow: auto;
 }
 
 #ProfileName {
@@ -54,9 +69,10 @@
   margin-bottom: 10px;
   color: #fff;
 }
-#rato {
+.rato {
   width: 100%;
   height: 10%;
+  margin-bottom: 10px;
 }
 
 .waku {
@@ -69,29 +85,44 @@
   align-items: center;
 }
 
-.skinWrap,
-.skins {
-  display: inline-flex;
-  justify-content: center;
-  /* align-items: center; */
-  width: 100%;
-  height: 50%;
-}
-.skins {
-  width: 95%;
+.skins,
+.prizes {
   height: 100%;
   display: grid;
+  justify-content: center;
+
   grid-auto-rows: 100px;
   grid-template-columns: repeat(auto-fill, 100px);
   grid-gap: 1% 1%;
 }
-.skin {
+.prize-image {
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+}
+.locked-image {
+  width: 50%;
+  height: 50%;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+.skin,
+.prize {
   border: 1px solid #888888;
   margin: 10px;
-  position: relative;
 }
-.skin:hover {
+.skin:hover,
+.prize:hover {
   outline: 3px solid #6cdfee;
+}
+.point-not-opened {
+  width: 100%;
+  height: 100%;
+  background-color: #000000dd;
+  left: 0;
+  top: 0;
 }
 
 .nowSkin {
@@ -111,4 +142,21 @@
   transform: translate(-50%, -50%);
   top: 40%;
   left: 50%;
+}
+
+.confirm {
+  width: 30%;
+  height: 17%;
+  min-width: 331px;
+  min-height: 175px;
+  background-color: #101010;
+  border: 2px solid #59a6ff;
+  border-radius: 13px;
+  color: #888888;
+}
+.have-point {
+  margin-left: 10px;
+}
+.confirm-text {
+  text-align: center;
 }
