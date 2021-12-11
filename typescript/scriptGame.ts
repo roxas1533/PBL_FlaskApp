@@ -44,6 +44,8 @@ export function loadPrizeList(callback: () => void) {
       Prize.prizeName = list["name_list"];
       Prize.userOpend = list["opend_prize"];
       Prize.userPoint = list["point"];
+      Prize.prizeSelected = list["selected_prize"];
+      Prize.setSkinByType();
       // Skin.changeSkin = Skin.nowSkin;
       callback();
     });

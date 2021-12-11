@@ -147,7 +147,6 @@ def profile():
         lose=p["lose"],
         cv=p["cv"],
         win_rato=p["win_rato"],
-        point=p["point"],
     )
 
 
@@ -194,16 +193,16 @@ def setting():
 
 @app.route("/getPrizeList", methods=["POST"])
 def GetPrizeList():
+    l = getPrizeList()
     if "username" not in session:
-        return jsonify({"prize_lists": None, "open_prized": None})
+        return jsonify(l | {"open_prized": None})
     conn = connectSQL()
     with conn.cursor() as cursor:
         cursor.execute(
-            "select opend_prize,point from user where name=%s", session["username"]
+            "select selected_prize,opend_prize,point from user where name=%s",
+            session["username"],
         )
         re = cursor.fetchall()[0]
-    l = getPrizeList()
-
     return jsonify(l | re)
 
 

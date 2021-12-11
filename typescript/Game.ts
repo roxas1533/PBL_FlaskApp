@@ -4,6 +4,7 @@ import { DamageNum } from "./DamageNumObject";
 import { Item } from "./Item";
 import { Player } from "./Player";
 import { PointObject } from "./PointObject";
+import { Prize } from "./Prize";
 import { loadProfile } from "./profile";
 import { RenderObject } from "./RenderObject";
 import { BT, setEndScene } from "./scriptGame";
@@ -87,7 +88,11 @@ export class Game {
           if (!(bullet.InnerId in Bullet.pushedBulletID)) {
             this.renderObject.push(
               Object.assign(
-                new Bullet(bullet.InnerId, bullet.TimeStamp),
+                new Bullet(
+                  bullet.InnerId,
+                  bullet.TimeStamp,
+                  Prize.skinByType[0]
+                ),
                 bullet
               ).onStage()
             );

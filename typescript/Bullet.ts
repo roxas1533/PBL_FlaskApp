@@ -18,7 +18,8 @@ export class Bullet extends GameObject {
   public nextY: number;
   private history: number[][];
   ID: number;
-  constructor(public innerID: number, public lastUpdate: number) {
+  skin: number;
+  constructor(public innerID: number, public lastUpdate: number, skin = 0) {
     super(0, 0, 0, 0);
     this.time = 0;
     this.bullet = new PIXI.Graphics();
@@ -28,6 +29,7 @@ export class Bullet extends GameObject {
     this.ID = 0;
     this.history = [];
     this.nextX = this.nextY = 0;
+    this.skin = skin;
   }
   syncPosition(b: any) {
     this.nextX = b.x;
@@ -48,8 +50,8 @@ export class Bullet extends GameObject {
       this.history.shift();
     }
 
-    this.bullet.x = this.x + Game.game.offsetX;
-    this.bullet.y = this.y + Game.game.offsetY;
+    this.bullet.x = this.x + this.width / 2 + Game.game.offsetX;
+    this.bullet.y = this.y + this.width / 2 + Game.game.offsetY;
     if (this.time >= this.Life) this.isDead = true;
     if (!this.IsSpireA) {
       if (collisionMapBullet(this, this.vx, 0)) {
@@ -68,37 +70,13 @@ export class Bullet extends GameObject {
     });
   }
   onStage() {
-    this.width = 100;
+    this.bullet = this.skinBullet();
 
-    this.bullet
-      .beginFill(0xff0000)
-      .drawCircle(0, 0, this.width / 2)
-      .endFill();
     // this.bullet
     //   .beginFill(0xff0000)
     //   .drawRect(0, 0, this.width, this.width)
     //   .endFill();
-    // let player: Player;
-    // if (this.ID == Game.game.player.id) player = Game.game.player;
-    // else player = Game.game.ePlayer;
-    // this.bullet
-    //   .beginFill(0xff0000)
-    //   .moveTo(0, 0)
-    //   .lineTo(
-    //     this.width * Math.cos(player.R + (90 + 30) * DEG_TO_RAD),
-    //     this.width * Math.sin(player.R + (90 + 30) * DEG_TO_RAD)
-    //   )
-    //   .lineTo(
-    //     this.width * Math.cos(player.R + (90 - 30) * DEG_TO_RAD),
-    //     this.width * Math.sin(player.R + (90 - 30) * DEG_TO_RAD)
-    //   )
-    //   .endFill();
 
-    // this.bullet.position.set(this.x - this.width / 2 + 1000, this.y);
-    // this.bullet.filters = [
-    //   new GlowFilter({ distance: 15, outerStrength: 6, quality: 0.7 }),
-    //   new PIXI.filters.BlurFilter(3),
-    // ];
     Bullet.BulletContainer.addChild(this.bullet);
     return this;
   }
@@ -107,5 +85,41 @@ export class Bullet extends GameObject {
   }
   getID(): number {
     return this.innerID;
+  }
+
+  skinBullet(): PIXI.Graphics {
+    this.width = 50;
+    const circle = this.bullet
+      .beginFill(0xff0000)
+      .drawCircle(0, 0, this.width / 2)
+      .endFill();
+    switch (this.skin) {
+      case 0:
+        return circle;
+      case 1:
+        this.bullet.filters = [
+          new GlowFilter({ distance: 15, outerStrength: 6, quality: 0.7 }),
+          new PIXI.filters.BlurFilter(3),
+        ];
+        return circle;
+      case 2:
+        this.bullet.clear();
+        let player: Player;
+        if (this.ID == Game.game.player.id) player = Game.game.player;
+        else player = Game.game.ePlayer;
+        return this.bullet
+          .beginFill(0xff0000)
+          .moveTo(0, 0)
+          .lineTo(
+            this.width * Math.cos(player.R + (90 + 30) * DEG_TO_RAD),
+            this.width * Math.sin(player.R + (90 + 30) * DEG_TO_RAD)
+          )
+          .lineTo(
+            this.width * Math.cos(player.R + (90 - 30) * DEG_TO_RAD),
+            this.width * Math.sin(player.R + (90 - 30) * DEG_TO_RAD)
+          )
+          .endFill();
+    }
+    return circle;
   }
 }

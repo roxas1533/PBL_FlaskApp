@@ -88,12 +88,17 @@ export function openProfile() {
           getOpendPrizeDivText(prize) +
           "</div>"
       );
-      prizeTypeWrapper!.lastElementChild?.addEventListener(
-        "click",
-        async (e) => {
-          changeSelectedPrize(e, Number(prize["type_id"]), Number(prize["id"]));
-        }
-      );
+      const addedElement = prizeTypeWrapper!.lastElementChild!;
+      addedElement.addEventListener("click", async (e) => {
+        Prize.changeSelectedPrize(
+          e,
+          Number(prize["type_id"]),
+          Number(prize["id"])
+        );
+      });
+      if (Prize.prizeSelected & (1 << Number(prize["id"]))) {
+        addedElement.classList.add("selected");
+      }
     } else {
       prizeTypeWrapper!.insertAdjacentHTML(
         "beforeend",
@@ -131,7 +136,7 @@ export function openProfile() {
       confirmOpenPrize.classList.add("d-none");
     });
   });
-  document.getElementById("havePoint")!.innerHTML = Prize.userPoint.toString();
+  updatePrizePointString();
 }
 
 function openPurchasePrizeWindow(e: Event) {
@@ -145,12 +150,13 @@ function openPurchasePrizeWindow(e: Event) {
   confirmOpenPrize.classList.add("d-flex");
   confirmOpenPrize.classList.remove("d-none");
   document.getElementById("openPrize")?.addEventListener("click", async (e) => {
-    if (await openPrize(num)) {
+    if (await Prize.openPrize(num)) {
+      updatePrizePointString();
       const targetPrize = Prize.prizelist[num];
       operateTarget.innerHTML = getOpendPrizeDivText(targetPrize);
       operateTarget.removeEventListener("click", openPurchasePrizeWindow);
       operateTarget.addEventListener("click", async (e) => {
-        changeSelectedPrize(
+        Prize.changeSelectedPrize(
           e,
           Number(targetPrize["type_id"]),
           Number(targetPrize["id"])
@@ -160,85 +166,6 @@ function openPurchasePrizeWindow(e: Event) {
       confirmOpenPrize.classList.add("d-none");
     }
   });
-}
-
-async function selectPrize(type: number, id: number): Promise<number> {
-  return await fetch("http://" + window.location.host + "/selectprize", {
-    method: "POST",
-    body: JSON.stringify({ type_id: type, id: id }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        return Promise.reject(new Error("エラーです"));
-      }
-    })
-    .then((re) => {
-      return new Promise((reslove) => {
-        if (re["result"] == -1) return reslove(re["data"]);
-        else {
-          switch (re["result"]) {
-            case 0:
-              alert("未開放です");
-              break;
-            default:
-              alert("不明なエラー");
-              break;
-          }
-          return reslove(-1);
-        }
-      });
-    });
-}
-
-async function changeSelectedPrize(e: Event, type_id: number, id: number) {
-  const me = <HTMLDivElement>e.currentTarget;
-
-  const selected = await selectPrize(type_id, id);
-
-  if (selected >= 0) {
-    const typePrizes = Array.from(me.parentElement!.children!);
-    typePrizes.forEach((p) => {
-      p.classList.remove("selected");
-      if (selected & (1 << Number(p.getAttribute("data-number")))) {
-        p.classList.add("selected");
-      }
-    });
-  }
-}
-
-async function openPrize(id: number): Promise<boolean> {
-  return await fetch("http://" + window.location.host + "/openprize", {
-    method: "POST",
-    body: JSON.stringify(id),
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        return Promise.reject(new Error("エラーです"));
-      }
-    })
-    .then((re) => {
-      return new Promise((reslove) => {
-        if (re["result"] == -1) return reslove(true);
-        else {
-          switch (re["result"]) {
-            case 0:
-              alert("ポイント不足です");
-              break;
-            case 1:
-              alert("既に開放済みです");
-              break;
-            default:
-              alert("不明なエラー");
-              break;
-          }
-          return reslove(false);
-        }
-      });
-    });
 }
 
 function deleteProfile() {
@@ -256,4 +183,11 @@ function deleteProfile() {
   }
   const profile = document.getElementById("Profile");
   profile!.remove();
+}
+
+function updatePrizePointString() {
+  const elements = Array.from(document.getElementsByClassName("havePoint"));
+  elements.forEach((element) => {
+    element.innerHTML = Prize.userPoint.toString();
+  });
 }
