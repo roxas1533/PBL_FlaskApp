@@ -4,6 +4,9 @@
 .d-none {
   display: none;
 }
+.text-centor {
+  text-align: center;
+}
 
 .user-select {
   margin-left: 10px;
@@ -125,7 +128,7 @@
   top: 0;
 }
 
-.nowSkin {
+.selected {
   outline: 3px solid #46f76c;
 }
 
@@ -146,7 +149,7 @@
 
 .confirm {
   width: 30%;
-  height: 17%;
+  height: 19%;
   min-width: 331px;
   min-height: 175px;
   background-color: #101010;
@@ -159,4 +162,21 @@
 }
 .confirm-text {
   text-align: center;
+}
+.confirm-interface {
+  margin-top: 10px;
+  justify-content: space-around;
+}
+.confirm-interface-button {
+  font-size: 1.2rem;
+  border: 1px #666666 solid;
+  padding: 3px 10px;
+  text-align: center;
+  width: 30%;
+  cursor: pointer;
+}
+.confirm-interface-button:hover {
+  color: #ffffff;
+  transition: 0.2s;
+  background-color: #444444;
 }

@@ -6,6 +6,7 @@ from API import (
     getProfile,
     getProfileFromName,
     getSkinList,
+    getType2Prize,
     getUserSkin,
     setSkin,
     secret_key,
@@ -200,8 +201,7 @@ def GetPrizeList():
         cursor.execute(
             "select opend_prize,point from user where name=%s", session["username"]
         )
-        re = cursor.fetchall()
-        re = re[0]
+        re = cursor.fetchall()[0]
     l = getPrizeList()
 
     return jsonify(l | re)
@@ -209,19 +209,59 @@ def GetPrizeList():
 
 @app.route("/openprize", methods=["POST"])
 def openPrize():
+    # {-1:"正常購入",0:"ポイント不足",1:"既にに開放済み",2:"不明"}
     if "username" not in session:
         return "", 401
-    print(request.data.decode("utf-8"))
+    id = int(request.data.decode("utf-8"))
     conn = connectSQL()
     with conn.cursor() as cursor:
         cursor.execute(
-            "select opend_prize from user where name=%s", session["username"]
+            "select point,opend_prize from user where name=%s", session["username"]
         )
-        re = cursor.fetchall()
-        re = re[0]
-    l = getPrizeList()
+        re = cursor.fetchall()[0]
+        playerPoint = re["point"]
+        playerOpened = re["opend_prize"]
+        prizeData = getPrizeList()["prize_list"][id]
+        if prizeData["need_point"] > playerPoint:
+            return jsonify({"result": 0})
+        if playerOpened & (1 << id):
+            return jsonify({"result": 1})
 
-    return jsonify(l | {"open_prized": re})
+        playerPoint -= prizeData["need_point"]
+        playerOpened |= 1 << id
+
+        cursor.execute(
+            "update user set point=%s ,opend_prize=%s where name=%s",
+            (playerPoint, playerOpened, session["username"]),
+        )
+        # conn.commit()
+
+    return jsonify(
+        {"result": -1, "playerPoint": playerPoint, "playerOpened": playerOpened}
+    )
+
+
+@app.route("/selectprize", methods=["POST"])
+def selectPrize():
+    if "username" not in session:
+        return "", 401
+    data = json.loads(request.data.decode("utf-8"))
+    lists = getType2Prize(data["type_id"])
+    conn = connectSQL()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "select selected_prize,opend_prize from user where name=%s",
+            session["username"],
+        )
+        re = cursor.fetchall()[0]
+        playerOpened = re["opend_prize"]
+        playerSelectedPrize = re["selected_prize"]
+        # if not (playerOpened & 1 << data["id"]):
+        #     return jsonify({"result": 0})
+        for prize in lists:
+            playerSelectedPrize &= ~(1 << prize["id"])
+        playerSelectedPrize |= 1 << data["id"]
+    return jsonify({"result": -1, "data": playerSelectedPrize})
 
 
 @app.route("/getSkinList", methods=["POST"])

@@ -35,14 +35,14 @@
           </div>
           <div class="d-flex flex-flow-col point-exchange">
             <p class="f-bold">景品交換 (所持ポイント：{{point}})</p>
-            <div class="prizes" id="prizes"></div>
+            <div class="" id="prizes"></div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="d-flex overray" id="confirmOpenPrize">
-    <div class="d-flex flex-flow-col confirm">
+  <div class="d-none overray" id="confirmOpenPrize">
+    <div class="d-flex flex-flow-col confirm" id="confirm">
       <div class="d-flex close prize-close">
         <span class="have-point">
           所持:<span id="havePoint">999</span>ポイント
@@ -59,7 +59,10 @@
         </p>
         <p class="confirm-text">消費:<span id="need_point"></span>ポイント</p>
       </div>
-      <div class="confirm-interface"></div>
+      <div class="d-flex confirm-interface">
+        <div class="confirm-interface-button" id="openPrize">はい</div>
+        <div class="confirm-interface-button prize-close">いいえ</div>
+      </div>
     </div>
   </div>
 </div>

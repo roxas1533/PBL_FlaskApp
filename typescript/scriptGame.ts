@@ -42,7 +42,7 @@ export function loadPrizeList(callback: () => void) {
       const list = JSON.parse(res) as { [key: string]: any };
       Prize.prizelist = list["prize_list"];
       Prize.prizeName = list["name_list"];
-      Prize.userOpend = list["prize_opend"];
+      Prize.userOpend = list["opend_prize"];
       Prize.userPoint = list["point"];
       // Skin.changeSkin = Skin.nowSkin;
       callback();
