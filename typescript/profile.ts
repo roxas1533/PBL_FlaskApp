@@ -111,31 +111,16 @@ export function openProfile() {
       </div>
       </div>`
       );
-      prizeTypeWrapper!.lastElementChild?.addEventListener(
-        "click",
-        openPurchasePrizeWindow
-      );
+      const me = prizeTypeWrapper!.lastElementChild!;
+      me.removeEventListener("click", openPurchasePrizeWindow);
+      me.addEventListener("click", openPurchasePrizeWindow);
     }
-  });
-  const confirmOpenPrize = document.getElementById("confirmOpenPrize")!;
-  confirmOpenPrize.addEventListener("click", (e) => {
-    e.stopPropagation();
-    confirmOpenPrize.classList.remove("d-flex");
-    confirmOpenPrize.classList.add("d-none");
   });
   const prizeConfirm = document.getElementById("confirm")!;
   prizeConfirm.addEventListener("click", (e) => {
     e.stopPropagation();
   });
-  const prizeCloseList = Array.from(
-    prizeConfirm.getElementsByClassName("prize-close")
-  );
-  prizeCloseList.forEach((p) => {
-    p.addEventListener("click", (e) => {
-      confirmOpenPrize.classList.remove("d-flex");
-      confirmOpenPrize.classList.add("d-none");
-    });
-  });
+
   updatePrizePointString();
 }
 
@@ -147,13 +132,51 @@ function openPurchasePrizeWindow(e: Event) {
   document.getElementById("need_point")!.innerHTML =
     Prize.prizeDict[num]["need_point"];
   const confirmOpenPrize = document.getElementById("confirmOpenPrize")!;
+  confirmOpenPrize.setAttribute("data", num.toString());
   confirmOpenPrize.classList.add("d-flex");
   confirmOpenPrize.classList.remove("d-none");
-  document.getElementById("openPrize")?.addEventListener("click", async (e) => {
-    console.log(Prize.prizeDict[num]["id"]);
-    if (await Prize.openPrize(Number(Prize.prizeDict[num]["id"]))) {
-      updatePrizePointString();
-      const targetPrize = Prize.prizeDict[num];
+  const openPrizeElement = document.getElementById("openPrize");
+  openPrizeElement!.removeEventListener("click", yesEvent);
+  openPrizeElement!.addEventListener("click", yesEvent);
+  const prizeCloseList = Array.from(
+    document.getElementsByClassName("prize-close")
+  );
+  prizeCloseList.forEach((p) => {
+    p.addEventListener("click", closeConfirmWindow, {
+      once: true,
+    });
+  });
+}
+function closeConfirmWindow(e: Event) {
+  const confirmOpenPrize = document.getElementById("confirmOpenPrize")!;
+  e.stopPropagation();
+  confirmOpenPrize.classList.remove("d-flex");
+  confirmOpenPrize.classList.add("d-none");
+  const prizeCloseList = Array.from(
+    document.getElementsByClassName("prize-close")
+  );
+  prizeCloseList.forEach((p) => {
+    p.removeEventListener("click", closeConfirmWindow);
+  });
+}
+async function yesEvent(e: Event) {
+  const confirmOpenPrize = document.getElementById("confirmOpenPrize")!;
+  const num = Number(confirmOpenPrize.getAttribute("data"));
+  if (await Prize.openPrize(Number(Prize.prizeDict[num]["id"]))) {
+    updatePrizePointString();
+    const targetPrize = Prize.prizeDict[num];
+    const prizesElementList = Array.from(
+      document.getElementsByClassName("prize")
+    );
+    let operateTarget: HTMLDivElement | undefined;
+    prizesElementList.forEach((ele) => {
+      const dataId = Number(ele.getAttribute("data-number"));
+      if (dataId === num) {
+        operateTarget = <HTMLDivElement>ele;
+        return;
+      }
+    });
+    if (operateTarget != undefined) {
       operateTarget.innerHTML = getOpendPrizeDivText(targetPrize);
       operateTarget.removeEventListener("click", openPurchasePrizeWindow);
       operateTarget.addEventListener("click", async (e) => {
@@ -163,10 +186,10 @@ function openPurchasePrizeWindow(e: Event) {
           Number(targetPrize["id"])
         );
       });
-      confirmOpenPrize.classList.remove("d-flex");
-      confirmOpenPrize.classList.add("d-none");
     }
-  });
+    confirmOpenPrize.classList.remove("d-flex");
+    confirmOpenPrize.classList.add("d-none");
+  }
 }
 
 function deleteProfile() {

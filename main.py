@@ -15,7 +15,7 @@ from API import (
 )
 import os
 import random
-import threading
+import inspect
 from client import Client, Instance, addClient, deleteClient, updateKeyboard
 from flask import Flask
 from flask import (
@@ -214,27 +214,32 @@ def openPrize():
         return "", 401
     id = int(request.data.decode("utf-8"))
     conn = connectSQL()
-    with conn.cursor() as cursor:
-        cursor.execute(
-            "select point,opend_prize from user where name=%s", session["username"]
-        )
-        re = cursor.fetchall()[0]
-        playerPoint = re["point"]
-        playerOpened = re["opend_prize"]
-        prizeData = getPrizeIdFromDict(id)
-        if prizeData["need_point"] > playerPoint:
-            return jsonify({"result": 0})
-        if playerOpened & (1 << id):
-            return jsonify({"result": 1})
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "select point,opend_prize from user where name=%s", session["username"]
+            )
+            re = cursor.fetchall()[0]
+            playerPoint = re["point"]
+            playerOpened = re["opend_prize"]
+            prizeData = getPrizeIdFromDict(id)
+            if prizeData["need_point"] > playerPoint:
+                return jsonify({"result": 0})
+            if playerOpened & (1 << id):
+                return jsonify({"result": 1})
 
-        playerPoint -= prizeData["need_point"]
-        playerOpened |= 1 << id
+            playerPoint -= prizeData["need_point"]
+            playerOpened |= 1 << id
 
-        cursor.execute(
-            "update user set point=%s ,opend_prize=%s where name=%s",
-            (playerPoint, playerOpened, session["username"]),
-        )
-        # conn.commit()
+            cursor.execute(
+                "update user set point=%s ,opend_prize=%s where name=%s",
+                (playerPoint, playerOpened, session["username"]),
+            )
+            # conn.commit()
+    except Exception as e:
+        e = str(e)
+        print(inspect.currentframe().f_code.co_name, "エラー", e)
+        return "不明なエラー", 500
 
     return jsonify(
         {"result": -1, "playerPoint": playerPoint, "playerOpened": playerOpened}

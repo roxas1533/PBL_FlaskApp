@@ -215,9 +215,7 @@ export class Game {
 
     this.player.onStage(gameCanvas);
     this.ePlayer.onStage(gameCanvas);
-    this.chargeGage.beginFill(0xffffff);
-    this.chargeGage.drawRect(0, 0, 30, 15);
-    this.chargeGage.endFill();
+    this.chargeGage.beginFill(0xffffff).drawRect(0, 0, 30, 15).endFill();
     this.chargeGage.width = 0;
     this.chargeGage.position.set(this.player.x, this.player.y - 20);
     this.chargeGage.tint = 0xff0000;
@@ -471,17 +469,7 @@ export class Game {
               op.disPlayeffect.tint = 0x00ff00;
             }
           }
-        } else {
-          if (Game.setting.setting["show_damage"] && op.lastHp - op.hp > 0) {
-            this.renderObject.push(
-              new DamageNum(
-                Math.random() * (op.width - 10) + op.x,
-                Math.random() * (op.width - 10) + op.y,
-                op.lastHp - op.hp
-              ).onStage(gameCanvas)
-            );
-          }
-        }
+        } else this.showDamage(op, gameCanvas);
       }
       op.lastHp = p.HP;
       if (op.hp <= 0) {
@@ -574,6 +562,18 @@ export class Game {
       Math.floor(this.offsetY)
     );
   }
+  showDamage(op: Player, gameCanvas: PIXI.Container) {
+    if (Game.setting.setting["show_damage"] && op.lastHp - op.hp > 0) {
+      this.renderObject.push(
+        new DamageNum(
+          Math.random() * (op.width - 10) + op.x,
+          Math.random() * (op.width - 10) + op.y,
+          op.lastHp - op.hp
+        ).onStage(gameCanvas)
+      );
+    }
+  }
+
   static changeScene(nextScene: string) {
     Game.currentScene = nextScene;
     Object.keys(Game.gameScenes).forEach((scene) => {
