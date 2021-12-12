@@ -84,7 +84,7 @@ export function openProfile() {
     if (Prize.userOpend & (1 << Number(prize["id"]))) {
       prizeTypeWrapper!.insertAdjacentHTML(
         "beforeend",
-        `<div data-number="${i}" class="pos-relative prize">` +
+        `<div data-number="${prize["id"]}" class="pos-relative prize">` +
           getOpendPrizeDivText(prize) +
           "</div>"
       );
@@ -102,7 +102,7 @@ export function openProfile() {
     } else {
       prizeTypeWrapper!.insertAdjacentHTML(
         "beforeend",
-        `<div data-number="${i}" class="pos-relative prize">
+        `<div data-number="${prize["id"]}" class="pos-relative prize">
         <img src="static/img/prizeImage/${prize["image_name"]}.png" class="prize-image"/>
         <div class="pos-absolute point-not-opened lock"/>
         <img src="static/img/locked.png" class="pos-absolute locked-image lock" />
@@ -143,16 +143,17 @@ function openPurchasePrizeWindow(e: Event) {
   const operateTarget = <HTMLDivElement>e.currentTarget!;
   const num = Number(operateTarget.getAttribute("data-number"));
   document.getElementById("prizeName")!.innerHTML =
-    Prize.prizelist[num]["description"];
+    Prize.prizeDict[num]["description"];
   document.getElementById("need_point")!.innerHTML =
-    Prize.prizelist[num]["need_point"];
+    Prize.prizeDict[num]["need_point"];
   const confirmOpenPrize = document.getElementById("confirmOpenPrize")!;
   confirmOpenPrize.classList.add("d-flex");
   confirmOpenPrize.classList.remove("d-none");
   document.getElementById("openPrize")?.addEventListener("click", async (e) => {
-    if (await Prize.openPrize(num)) {
+    console.log(Prize.prizeDict[num]["id"]);
+    if (await Prize.openPrize(Number(Prize.prizeDict[num]["id"]))) {
       updatePrizePointString();
-      const targetPrize = Prize.prizelist[num];
+      const targetPrize = Prize.prizeDict[num];
       operateTarget.innerHTML = getOpendPrizeDivText(targetPrize);
       operateTarget.removeEventListener("click", openPurchasePrizeWindow);
       operateTarget.addEventListener("click", async (e) => {

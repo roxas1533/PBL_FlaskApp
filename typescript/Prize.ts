@@ -1,6 +1,7 @@
 export class Prize {
   static prizelist: { [key: string]: string }[];
   static prizeName: { [key: string]: string }[];
+  static prizeDict: { [key: number]: { [key: string]: string } };
   static userOpend: number;
   static userPoint: number;
   static prizeSelected: number;
@@ -19,6 +20,12 @@ export class Prize {
         }
       });
     }
+  }
+  static setPrizeDict() {
+    Prize.prizeDict = {};
+    Prize.prizelist.forEach((element) => {
+      Prize.prizeDict[Number(element["id"])] = element;
+    });
   }
 
   static async openPrize(id: number): Promise<boolean> {

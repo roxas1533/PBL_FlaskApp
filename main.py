@@ -2,6 +2,7 @@ from API import (
     SkinList,
     connectSQL,
     getNameSession,
+    getPrizeIdFromDict,
     getPrizeList,
     getProfile,
     getProfileFromName,
@@ -220,7 +221,7 @@ def openPrize():
         re = cursor.fetchall()[0]
         playerPoint = re["point"]
         playerOpened = re["opend_prize"]
-        prizeData = getPrizeList()["prize_list"][id]
+        prizeData = getPrizeIdFromDict(id)
         if prizeData["need_point"] > playerPoint:
             return jsonify({"result": 0})
         if playerOpened & (1 << id):

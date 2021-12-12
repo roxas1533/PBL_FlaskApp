@@ -38,6 +38,8 @@ export class Game {
   public timeSinceSync: number;
   receiveFlag: boolean;
   InstanceID: any;
+  floorTexture: PIXI.Texture<PIXI.Resource>;
+  wallTexture: PIXI.Texture<PIXI.Resource>;
   constructor() {
     this.player = new Player(0, 0, 0, 0, 0, 0, 0, true);
     this.ePlayer = new Player(0, 0, 0, 0, 0, 0, 0, false);
@@ -53,6 +55,8 @@ export class Game {
     this.bettweenNowLastTime = 0;
     this.timeSinceSync = 0;
     this.chargeGage = new PIXI.Graphics();
+    this.floorTexture = this.getMapTexture(true);
+    this.wallTexture = this.getMapTexture(false);
   }
 
   connectServer() {
@@ -159,6 +163,7 @@ export class Game {
                     }
                   });
                 });
+              this.generateMaptexture();
               this.setGameScene();
               Game.changeScene("gameScene");
             }
@@ -177,29 +182,33 @@ export class Game {
     const UICanvas = new PIXI.Graphics();
     this.ePlayer.cont.mask = this.player.maskCanvas;
     lightCanvas.filters = [new PIXI.filters.BlurFilter()];
-    gameCanvas.addChild(lightCanvas);
-    const mapContainer = new PIXI.Container();
+    const wallContainer = new PIXI.Container();
+    const floorContainer = new PIXI.Container();
     let pol: number[][][] = [];
-
     this.globalMap.forEach((e, i) => {
       e.forEach((b, j) => {
+        let obj: PIXI.Sprite;
         if (b === 1) {
-          let obj = new PIXI.Graphics()
-            .beginFill(0x808080)
-            .drawRect(j * 30 + this.offsetX, i * 30 + this.offsetY, 30, 30)
-            .endFill();
-          mapContainer.addChild(obj);
+          obj = new PIXI.Sprite(this.wallTexture);
           pol.push([
             [j * 30, i * 30],
             [j * 30 + 30, i * 30],
             [j * 30 + 30, i * 30 + 30],
             [j * 30, i * 30 + 30],
           ]);
+          wallContainer.addChild(obj);
+        } else {
+          obj = new PIXI.Sprite(this.floorTexture);
+          floorContainer.addChild(obj);
         }
+        obj.position.set(j * 30, i * 30);
+        obj.width = 30;
+        obj.height = 30;
       });
     });
-
-    gameCanvas.addChild(mapContainer);
+    gameCanvas.addChild(floorContainer);
+    gameCanvas.addChild(lightCanvas);
+    gameCanvas.addChild(wallContainer);
 
     gameCanvas.addChild(Item.ItemContainer);
     gameCanvas.addChild(Bullet.BulletContainer);
@@ -305,6 +314,7 @@ export class Game {
       this.timeSinceSync += t;
       Game.cycle += magnification;
       FPS.text = "" + Math.round(Game.app.ticker.FPS * 10) / 10;
+
       for (let i = this.renderObject.length - 1; i >= 0; i--) {
         this.renderObject[i].update(magnification, this.offsetX, this.offsetY);
         if (this.renderObject[i].isDead) {
@@ -318,8 +328,7 @@ export class Game {
         this.drawPlayers(magnification, gameCanvas);
 
         this.updateView(lightCanvas, segments);
-        mapContainer.position.set(this.offsetX, this.offsetY);
-
+        this.updateMapContainer(wallContainer, floorContainer);
         for (let i = this.globalItems.length - 1; i >= 0; i--) {
           this.globalItems[i].update(this.offsetX, this.offsetY);
           collisionObject(
@@ -365,6 +374,7 @@ export class Game {
         this.server!.send(JSON.stringify({ key: this.player.key }));
 
         if (Game.currentScene != "gameScene") {
+          this.server!.close();
           Game.app.ticker.remove(gameLoop);
         }
         this.receiveFlag = false;
@@ -384,10 +394,9 @@ export class Game {
       [this.player.x - 500, this.player.y - 500],
       [this.player.x + 500, this.player.y + 500]
     );
-    lightCanvas.clear();
-    lightCanvas.beginFill(0x444444);
-    this.player.maskCanvas.clear();
-    this.player.maskCanvas.beginFill(0xffff00);
+    lightCanvas.clear().beginFill(0xffffff);
+    lightCanvas.alpha = 0.3;
+    this.player.maskCanvas.clear().beginFill(0xffff00);
     const startX = visibility[0][0] + this.offsetX;
     const startY = visibility[0][1] + this.offsetY;
     lightCanvas.moveTo(startX, startY);
@@ -527,6 +536,44 @@ export class Game {
     });
   }
 
+  getMapTexture(isFloor = false): PIXI.Texture {
+    let texuteID = Prize.skinByType[1] - 4;
+    let texutureName = "/static/img/wallTexture.png";
+    if (isFloor) {
+      texuteID = Prize.skinByType[2] - 25;
+      texutureName = "/static/img/floorTexture.png";
+    }
+
+    const tex = new PIXI.Texture(
+      Game.loader.resources[texutureName].texture!.castToBaseTexture(),
+      new PIXI.Rectangle(
+        (texuteID % 5) * 128,
+        Math.floor(texuteID / 5) * 128,
+        128,
+        128
+      )
+    );
+
+    return tex;
+  }
+
+  generateMaptexture() {
+    this.floorTexture = this.getMapTexture(true);
+    this.wallTexture = this.getMapTexture(false);
+  }
+  updateMapContainer(
+    wallContainer: PIXI.Container,
+    floorContainer: PIXI.Container
+  ) {
+    wallContainer.position.set(
+      Math.floor(this.offsetX),
+      Math.floor(this.offsetY)
+    );
+    floorContainer.position.set(
+      Math.floor(this.offsetX),
+      Math.floor(this.offsetY)
+    );
+  }
   static changeScene(nextScene: string) {
     Game.currentScene = nextScene;
     Object.keys(Game.gameScenes).forEach((scene) => {

@@ -14,6 +14,8 @@ window.addEventListener("load", () => {
   Game.loader = PIXI.Loader.shared;
   Game.loader.add("/static/img/items.png");
   Game.loader.add("/static/img/bulletItem.png");
+  Game.loader.add("/static/img/wallTexture.png");
+  Game.loader.add("/static/img/floorTexture.png");
   Game.loader.onComplete.add(() => {
     Game.game = new Game();
     document.addEventListener("keydown", (e) => {

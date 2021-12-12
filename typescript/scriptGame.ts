@@ -46,6 +46,7 @@ export function loadPrizeList(callback: () => void) {
       Prize.userPoint = list["point"];
       Prize.prizeSelected = list["selected_prize"];
       Prize.setSkinByType();
+      Prize.setPrizeDict();
       // Skin.changeSkin = Skin.nowSkin;
       callback();
     });

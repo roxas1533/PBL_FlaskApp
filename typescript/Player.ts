@@ -79,7 +79,6 @@ export class Player extends GameObject {
     if (id) this.disPlayeffect = this.makeDisPlayeffect();
   }
   updateSetting() {
-    console.log(Game.setting.setting);
     let copySetting = JSON.parse(JSON.stringify(Game.setting.setting));
     copySetting[
       Object.keys(copySetting).filter((key) => {

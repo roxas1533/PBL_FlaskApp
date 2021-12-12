@@ -79,6 +79,10 @@ def getType2Prize(typeID):
     return prizelist.getType2Prize(typeID)
 
 
+def getPrizeIdFromDict(ID):
+    return prizelist.getPrizeIDfromDict(ID)
+
+
 def getProfile(conn, session):
     return getProfileFromName(conn, session["username"])
 

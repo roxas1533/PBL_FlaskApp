@@ -8,6 +8,7 @@ class PrizeList:
         self.__prizeTypeName = []
         self.__prizeLength = 0
         self.__type2Prize = []
+        self.__prizeIDtoDict = {}
         self.readSkin(conn)
 
     def readSkin(self, conn):
@@ -23,6 +24,7 @@ class PrizeList:
                 self.__prizeLength = len(self.__prizeList)
                 temp = copy.deepcopy(self.__prizeList)
                 for p in self.__prizeList:
+                    self.__prizeIDtoDict[int(p["id"])] = p
                     type = int(p["type_id"])
                     if len(self.__type2Prize) < type + 1:
                         self.__type2Prize.append([])
@@ -35,6 +37,9 @@ class PrizeList:
 
     def getPrizeList(self):
         return self.__prizeList
+
+    def getPrizeIDfromDict(self, id):
+        return self.__prizeIDtoDict[id]
 
     def getPrizeTypeNameList(self):
         return self.__prizeTypeName
