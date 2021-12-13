@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"log"
 	"math"
 	"math/rand"
 	"net/http"
@@ -163,6 +164,17 @@ type returnMessagePlayer struct {
 
 func (me *instance) Append(b BulletClass) {
 	me.wrapperBullets = append(me.wrapperBullets, b)
+}
+
+func requestDbServer(client http.Client,url string,data []byte) string{
+	req, _ := http.NewRequest("POST", "http://localhost/"+url, bytes.NewBuffer(data))
+	resp, _ := client.Do(req)
+	if resp.StatusCode == 500{
+		req, _ = http.NewRequest("POST", "http://localhost:5000/"+url, bytes.NewBuffer(data))
+		resp, _ = client.Do(req)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	return string(body)
 }
 
 type instance struct {
@@ -521,19 +533,32 @@ func loopInstance() {
 					}
 				}
 				if v.R {
+					maxPoint:=0
+					for i := 0; i < len(v.rMP.Player); i++ {
+						p := &v.rMP.Player[i]
+						maxPoint=int(math.Max(float64(maxPoint),float64(p.Cv+1)))
+
+						if p.sessionId != "" {
+							client := &http.Client{}
+								isWin:=p.Hp > 0
+								pointUpadteJson := "{\"sessionid\": \"" + p.sessionId + "\", \"win\":" + strconv.FormatBool(isWin) + "}"
+								log.Println(bytes.NewBuffer([]byte(pointUpadteJson)))
+								body:=requestDbServer(*client,"pointUpdate",[]byte(pointUpadteJson))
+								log.Println(body)
+						}
+
+					}
 					for i := 0; i < len(v.rMP.Player); i++ {
 						p := &v.rMP.Player[i]
 						if p.sessionId != "" {
 							client := &http.Client{}
-							if p.sessionId != "" {
-								mysteriousJSON := "{\"sessionid\": \"" + p.sessionId + "\", \"win\":" + strconv.FormatBool(p.Hp > 0) + "}"
-
-								// var i interface{}
-								// json.Unmarshal([]byte(mysteriousJSON), &i)
-								req, _ := http.NewRequest("POST", "http://localhost/pointUpdate", bytes.NewBuffer([]byte(mysteriousJSON)))
-								client.Do(req)
-								// body, _ := io.ReadAll(resp.Body)
+							pointUpadteJson:=""
+							if(p.Hp < 0){
+								pointUpadteJson = "{\"sessionid\": \"" + p.sessionId + "\", \"addPoint\":1}"
+							}else{
+								pointUpadteJson = "{\"sessionid\": \"" + p.sessionId + "\", \"addPoint\":"+strconv.Itoa(maxPoint)+"}"
 							}
+							requestDbServer(*client,"addPoint",[]byte(pointUpadteJson))
 						}
 
 					}
@@ -640,6 +665,7 @@ func WebsocketGlobalServer(c echo.Context) error {
 					resp, _ = client.Do(req)
 				}
 				body, _ := io.ReadAll(resp.Body)
+				
 				json.Unmarshal(body, &po)
 			}
 

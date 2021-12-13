@@ -43,6 +43,11 @@ import logging
 # log.setLevel(logging.ERROR)
 
 
+def Error(e):
+    print(inspect.stack()[1].function, "エラー-->", str(e))
+    return "internal Error", 500
+
+
 def updateDefaultSetting():
     conn = connectSQL()
     with conn.cursor() as cursor:
@@ -73,11 +78,11 @@ def hello():
 def pointupdate():
     if request.remote_addr != "127.0.0.1":
         return jsonify({"reason": "you cannot this API!!"}), 403
-    data = request.data.decode("utf-8")
-    data = json.loads(data)
-    name = getNameSession(data["sessionid"])["username"]
-    win = data["win"]
     try:
+        data = request.data.decode("utf-8")
+        data = json.loads(data)
+        name = getNameSession(data["sessionid"])["username"]
+        win = data["win"]
         conn = connectSQL()
         with conn.cursor() as cursor:
             sql = (
@@ -87,12 +92,29 @@ def pointupdate():
             )
             cursor.execute(sql, (win + 0, (not win) + 0, name))
         conn.commit()
-        # re = cursor.fetchall()
         return jsonify({"result": True})
     except Exception as e:
-        e = str(e)
-        print("pointUpdateエラー", e)
-        return jsonify({"result": False, "reason": "不明なエラー"})
+        return Error(e)
+
+
+@app.route("/addPoint", methods=["POST"])
+def addPoint():
+    if request.remote_addr != "127.0.0.1":
+        return jsonify({"reason": "you cannot this API!!"}), 403
+    data = request.data.decode("utf-8")
+    data = json.loads(data)
+    name = getNameSession(data["sessionid"])["username"]
+    addPoint = data["addPoint"]
+    try:
+        conn = connectSQL()
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "update user set point=point+%s where name=%s", (addPoint, name)
+            )
+        conn.commit()
+        return jsonify({"result": True})
+    except Exception as e:
+        return Error(e)
 
 
 @app.route("/game", methods=["GET"])
@@ -235,11 +257,9 @@ def openPrize():
                 "update user set point=%s ,opend_prize=%s where name=%s",
                 (playerPoint, playerOpened, session["username"]),
             )
-            # conn.commit()
+            conn.commit()
     except Exception as e:
-        e = str(e)
-        print(inspect.currentframe().f_code.co_name, "エラー", e)
-        return "不明なエラー", 500
+        return Error(e)
 
     return jsonify(
         {"result": -1, "playerPoint": playerPoint, "playerOpened": playerOpened}
@@ -261,11 +281,16 @@ def selectPrize():
         re = cursor.fetchall()[0]
         playerOpened = re["opend_prize"]
         playerSelectedPrize = re["selected_prize"]
-        # if not (playerOpened & 1 << data["id"]):
-        #     return jsonify({"result": 0})
+        if not (playerOpened & 1 << data["id"]):
+            return jsonify({"result": 0})
         for prize in lists:
             playerSelectedPrize &= ~(1 << prize["id"])
         playerSelectedPrize |= 1 << data["id"]
+        cursor.execute(
+            "update user set selected_prize=%s where name=%s",
+            (playerSelectedPrize, session["username"]),
+        )
+        conn.commit()
     return jsonify({"result": -1, "data": playerSelectedPrize})
 
 
@@ -307,9 +332,7 @@ def login():
             session["username"] = re[0]["name"]
         return jsonify({"result": True})
     except Exception as e:
-        e = str(e)
-        print("loginエラー", e)
-        return jsonify({"result": False, "reason": "不明なエラー"})
+        return Error(e)
 
 
 @app.route("/regist", methods=["POST"])
